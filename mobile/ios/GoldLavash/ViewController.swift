@@ -12,7 +12,7 @@ final class ViewController: UIViewController, WKNavigationDelegate {
     // Стабильный адрес рабочего деплоя. При редеплое на тот же
     // -i deployment id (clasp deploy -i AKfycby...) этот адрес не меняется.
     private let appURLString =
-        "https://script.google.com/macros/s/AKfycbyfKu_QKGUOu00GeXmNwie5VTPTgXO6M2wKORUrVfwMR2zvkePfi9nqiVC34BoFAj_G/exec?mobile=1"
+        "https://script.google.com/macros/s/AKfycbyfKu_QKGUOu00GeXmNwie5VTPTgXO6M2wKORUrVfwMR2zvkePfi9nqiVC34BoFAj_G/exec"
 
     private var webView: WKWebView!
     private let activityIndicator = UIActivityIndicatorView(style: .large)

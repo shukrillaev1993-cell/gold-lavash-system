@@ -4,5 +4,5 @@
 
     <!-- Стабильный адрес рабочего деплоя. При редеплое на тот же -i deployment id
          (clasp deploy -i AKfycby...) этот адрес не меняется, менять здесь не нужно. -->
-    <string name="app_url" translatable="false">https://script.google.com/macros/s/AKfycbyfKu_QKGUOu00GeXmNwie5VTPTgXO6M2wKORUrVfwMR2zvkePfi9nqiVC34BoFAj_G/exec?mobile=1</string>
+    <string name="app_url" translatable="false">https://script.google.com/macros/s/AKfycbyfKu_QKGUOu00GeXmNwie5VTPTgXO6M2wKORUrVfwMR2zvkePfi9nqiVC34BoFAj_G/exec</string>
 </resources>
