@@ -1,0 +1,33 @@
+workflows:
+  ios-goldlavash-unsigned:
+    name: GoldLavash iOS — unsigned .ipa (для установки через Sideloadly/AltStore)
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    environment:
+      xcode: latest
+    scripts:
+      - name: Собрать .app без подписи
+        script: |
+          set -e
+          cd mobile/ios
+          xcodebuild \
+            -project GoldLavash.xcodeproj \
+            -scheme GoldLavash \
+            -configuration Debug \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+      - name: Упаковать в .ipa
+        script: |
+          set -e
+          cd mobile/ios
+          APP_PATH="build/Build/Products/Debug-iphoneos/GoldLavash.app"
+          rm -rf Payload
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
+          zip -r GoldLavash-unsigned.ipa Payload
+          rm -rf Payload
+    artifacts:
+      - mobile/ios/GoldLavash-unsigned.ipa
