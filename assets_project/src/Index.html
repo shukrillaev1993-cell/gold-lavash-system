@@ -1,0 +1,2918 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Учёт ОС — GOLD LAVASH</title>
+<style>
+:root{--navy:#1a3a5c;--navy2:#234d7a;--gold:#d4a017;--gold2:#f0c040;--bg:#f0f4f8;--s:#fff;--s2:#f7f9fc;--t:#1a2332;--t2:#4a5568;--t3:#718096;--b:#e2e8f0;--b2:#cbd5e0;--green:#38a169;--red:#e53e3e;--amber:#d69e2e;--r:10px;--sh:0 1px 4px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.05)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);font-size:14px}
+
+/* Экран входа */
+#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1a3a5c 0%,#0d2540 60%,#1a3a5c 100%);display:flex;align-items:center;justify-content:center;z-index:1000}
+.login-wrap{display:flex;align-items:stretch;border-radius:18px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45);width:760px;max-width:96vw}
+.login-left{background:var(--navy);padding:36px 32px;width:280px;flex-shrink:0;display:flex;flex-direction:column}
+.login-left-logo{font-size:34px;margin-bottom:8px}
+.login-left-brand{font-size:19px;font-weight:800;color:var(--gold);line-height:1.2}
+.login-left-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:6px;line-height:1.5}
+.login-left-depts{margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,.1)}
+.login-left-depts-t{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px}
+.dept-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.55);font-size:11px;margin:2px 2px 2px 0}
+.login-right{background:#fff;padding:36px 32px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.login-right-t{font-size:21px;font-weight:800;color:var(--navy);margin-bottom:3px}
+.login-right-sub{font-size:13px;color:var(--t3);margin-bottom:26px}
+.login-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.login-field label{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+.login-field-wrap{position:relative}
+.login-field input{width:100%;padding:11px 40px 11px 13px;border:2px solid var(--b);border-radius:9px;font-size:14px;color:var(--t);outline:none;transition:border .15s;background:var(--s2);font-family:inherit}
+.login-field input:focus{border-color:var(--navy);background:#fff}
+.eye-btn{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t3);font-size:15px;padding:2px}
+.login-err{background:#fff5f5;border:1.5px solid #fed7d7;border-radius:8px;padding:9px 12px;font-size:12.5px;color:var(--red);margin-bottom:12px;display:none}
+.login-btn{width:100%;padding:12px;background:var(--navy);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s;margin-top:4px}
+.login-btn:hover{background:var(--navy2)}
+.login-footer{font-size:11px;color:var(--t3);text-align:center;margin-top:16px}
+
+/* Sidebar */
+#sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--navy);display:flex;flex-direction:column;z-index:100;transition:transform .25s}
+.sidebar-logo{padding:20px 16px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-brand{color:var(--gold);font-size:14px;font-weight:700;letter-spacing:.5px}
+.sidebar-dept{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px}
+.sidebar-role{display:inline-block;margin-top:5px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:rgba(212,160,23,.2);color:var(--gold2)}
+.nav-group{padding:10px 0 2px}
+.nav-lbl{color:rgba(255,255,255,.3);font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:0 16px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 16px;color:rgba(255,255,255,.65);cursor:pointer;font-size:13px;border-left:3px solid transparent;transition:all .15s}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.active{background:rgba(212,160,23,.15);color:var(--gold2);border-left-color:var(--gold)}
+.nav-item .ic{font-size:15px;width:18px;text-align:center}
+.nav-item.dim{opacity:.4;pointer-events:none}
+.sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,.1)}
+
+/* Main */
+#main{margin-left:220px;min-height:100vh}
+.topbar{background:var(--s);border-bottom:1px solid var(--b);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.topbar-title{font-size:15px;font-weight:700;color:var(--navy)}
+
+/* Кнопки */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--navy);color:#fff}.btn-primary:hover{background:var(--navy2)}
+.btn-gold{background:var(--gold);color:#fff}.btn-gold:hover{background:var(--gold2);color:var(--navy)}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{opacity:.88}
+.btn-outline{background:transparent;color:var(--navy);border:1.5px solid var(--b2)}.btn-outline:hover{border-color:var(--navy)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{opacity:.88}
+.btn-sm{padding:5px 11px;font-size:12px}
+
+/* Страницы */
+.page{display:none;padding:22px}
+.page.active{display:block}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}
+.kpi-card{background:var(--s);border-radius:var(--r);padding:18px;border:1px solid var(--b);box-shadow:var(--sh)}
+.kpi-lbl{font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.kpi-val{font-size:26px;font-weight:800;color:var(--navy);margin:5px 0 1px}
+.kpi-sub{font-size:11px;color:var(--t3)}
+.kpi-card.gold .kpi-val{color:var(--gold)}.kpi-card.green .kpi-val{color:var(--green)}.kpi-card.red .kpi-val{color:var(--red)}
+
+/* Таблица */
+.tbl-wrap{background:var(--s);border-radius:var(--r);border:1px solid var(--b);box-shadow:var(--sh);overflow:hidden}
+.tbl-head{padding:13px 16px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--b);flex-wrap:wrap}
+.search-box{flex:1;min-width:190px;display:flex;align-items:center;background:var(--s2);border:1.5px solid var(--b);border-radius:8px;padding:7px 11px;gap:7px}
+.search-box input{border:none;background:transparent;font-size:13px;width:100%;outline:none;color:var(--t)}
+.flt{padding:7px 10px;border-radius:8px;border:1.5px solid var(--b);background:var(--s2);font-size:13px;color:var(--t);cursor:pointer}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--s2)}
+th{padding:10px 13px;text-align:left;font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--b);white-space:nowrap}
+td{padding:10px 13px;border-bottom:1px solid var(--b);font-size:13px;color:var(--t)}
+tbody tr:hover{background:var(--s2);cursor:pointer}
+tbody tr:last-child td{border-bottom:none}
+
+/* Бейджи */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.b-os{background:#ebf4ff;color:#2b6cb0}.b-inv{background:#f0fff4;color:#276749}
+.b-on{background:#f0fff4;color:#276749}.b-res{background:#fffbeb;color:#92400e}
+.b-off{background:#fff5f5;color:#c53030}
+.b-admin{background:rgba(212,160,23,.15);color:#92620a}
+.b-user{background:#ebf4ff;color:#2b6cb0}
+
+/* Детальная панель */
+.dp{position:fixed;right:0;top:0;bottom:0;width:420px;background:var(--s);box-shadow:-4px 0 24px rgba(0,0,0,.12);z-index:150;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column}
+.dp.open{transform:translateX(0)}
+.dp-head{background:var(--navy);color:#fff;padding:18px 20px;display:flex;align-items:flex-start;justify-content:space-between}
+.dp-inv{font-size:11px;color:var(--gold);font-weight:700}
+.dp-name{font-size:14px;font-weight:800;margin-top:3px;line-height:1.3}
+.dp-dept{font-size:11px;color:rgba(255,255,255,.55);margin-top:5px}
+.dp-body{flex:1;overflow-y:auto;padding:18px}
+.dp-foot{padding:14px 18px;border-top:1px solid var(--b);display:flex;gap:7px;flex-wrap:wrap}
+.dp-photo{width:100%;height:170px;object-fit:cover;border-radius:9px;margin-bottom:14px;border:1px solid var(--b)}
+.dp-photo-ph{width:100%;height:120px;background:var(--s2);border-radius:9px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:12px;border:1px dashed var(--b2)}
+.dp-qr{text-align:center;margin:10px 0}
+.dp-qr img{width:110px;height:110px;border-radius:8px;border:1px solid var(--b)}
+.dp-qr-lbl{font-size:10px;color:var(--t3);margin-top:3px}
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--b)}
+.info-row:last-child{border:none}
+.info-lbl{font-size:12px;color:var(--t3)}
+.info-val{font-size:13px;font-weight:500;color:var(--t);text-align:right;max-width:60%}
+
+/* Модал */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,20,30,.55);z-index:200;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--s);border-radius:14px;width:680px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-h{padding:18px 22px 14px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--s);z-index:1}
+.modal-h h2{font-size:16px;font-weight:700;color:var(--navy)}
+.modal-b{padding:18px 22px}
+.modal-f{padding:14px 22px;border-top:1px solid var(--b);display:flex;justify-content:flex-end;gap:9px;position:sticky;bottom:0;background:var(--s)}
+
+/* Форма */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ff{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;font-weight:600;color:var(--t2)}
+.field input,.field select,.field textarea{padding:9px 11px;border-radius:8px;border:1.5px solid var(--b);background:var(--s2);font-size:13px;color:var(--t);transition:border .15s;outline:none;font-family:inherit}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--navy)}
+.field textarea{resize:vertical;min-height:65px}
+.fhint{font-size:11px;color:var(--t3);margin-top:2px}
+.fsec{margin-bottom:18px}
+.fsec-t{font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.7px;padding-bottom:9px;margin-bottom:11px;border-bottom:1.5px solid var(--b)}
+
+/* Акт */
+.act-preview{background:var(--s2);border:1px solid var(--b);border-radius:10px;padding:16px;margin-top:14px}
+.act-preview-t{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.act-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--b)}
+.act-row:last-child{border:none}
+.act-row .al{color:var(--t3)}.act-row .av{font-weight:600;color:var(--t)}
+
+/* QR генерация прогресс */
+.qr-progress{background:var(--s2);border-radius:10px;border:1px solid var(--b);padding:16px;margin-top:14px}
+.qr-bar-wrap{background:var(--b);border-radius:4px;height:8px;margin:10px 0}
+.qr-bar{background:var(--navy);height:8px;border-radius:4px;transition:width .3s}
+
+/* Pagination */
+.pgn{display:flex;align-items:center;gap:5px;padding:11px 14px;border-top:1px solid var(--b);justify-content:flex-end}
+.pgn-info{font-size:12px;color:var(--t3);margin-right:auto}
+.pg-btn{padding:5px 10px;border-radius:6px;border:1px solid var(--b);background:var(--s);font-size:12px;cursor:pointer}
+.pg-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* Loader */
+#loader{display:none;position:fixed;inset:0;background:rgba(240,244,248,.7);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+#loader.show{display:flex}
+.spinner{width:34px;height:34px;border:3px solid var(--b2);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Toast */
+.toast{position:fixed;bottom:22px;right:22px;z-index:999;background:var(--navy);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;box-shadow:var(--sh);transform:translateY(80px);opacity:0;transition:all .3s;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:var(--green)}.toast.err{background:var(--red)}
+
+/* Амортизация таблица */
+.at{width:100%;font-size:12px;border-collapse:collapse;margin-top:6px}
+.at th{background:var(--s2);padding:5px 8px;text-align:left;color:var(--t3);font-size:10px}
+.at td{padding:5px 8px;border-bottom:1px solid var(--b)}
+
+/* Списание акт */
+.wo-warning{background:#fff5f5;border:1.5px solid var(--red);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--red)}
+
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}.#sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}.fg{grid-template-columns:1fr}
+  .dp{width:100%}.kpi-val{font-size:21px}
+}
+</style>
+</head>
+<body>
+
+<!-- ЭКРАН ВХОДА -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-left">
+      <div>
+        <div class="login-left-logo">🏭</div>
+        <div class="login-left-brand">GOLD LAVASH</div>
+        <div class="login-left-sub">Система учёта основных средств и инвентаря</div>
+      </div>
+      <div class="login-left-depts">
+        <div class="login-left-depts-t">Подразделения</div>
+        <span class="dept-pill">🏭 Производство</span>
+        <span class="dept-pill">🏗️ Завод СЭЗ</span>
+        <span class="dept-pill">📦 ОТП Самарканд</span>
+        <span class="dept-pill">📦 ОТП Тошкент</span>
+        <span class="dept-pill">🏢 Офис Ад</span>
+      </div>
+    </div>
+    <div class="login-right">
+      <div class="login-right-t">Вход в систему</div>
+      <div class="login-right-sub">Введите логин и пароль вашего подразделения</div>
+      <div class="login-err" id="login-err"></div>
+      <div class="login-field">
+        <label>Логин</label>
+        <div class="login-field-wrap">
+          <input type="text" id="login-input" placeholder="Введите логин" autocomplete="username"
+            onkeydown="if(event.key==='Enter')document.getElementById('pass-input').focus()">
+        </div>
+      </div>
+      <div class="login-field">
+        <label>Пароль</label>
+        <div class="login-field-wrap">
+          <input type="password" id="pass-input" placeholder="Введите пароль" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')doLogin()">
+          <button class="eye-btn" onclick="togglePass()" title="Показать/скрыть пароль">👁️</button>
+        </div>
+      </div>
+      <button class="login-btn" id="login-btn" onclick="doLogin()">Войти →</button>
+      <div class="login-footer">
+        Дефолтный администратор: логин <strong>admin</strong> / пароль <strong>admin123</strong><br>
+        Смените после первого входа в разделе «Пользователи»
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-brand">🏭 GOLD LAVASH</div>
+    <div class="sidebar-dept" id="sb-dept">Загрузка...</div>
+    <span class="sidebar-role" id="sb-role">—</span>
+  </div>
+  <div class="nav-group">
+    <div class="nav-lbl">Главное</div>
+    <div class="nav-item active" onclick="nav('dashboard')"><span class="ic">📊</span>Дашборд</div>
+    <div class="nav-item" onclick="nav('list')"><span class="ic">📋</span>Реестр ОС</div>
+    <div class="nav-item" id="nav-add" onclick="nav('add')"><span class="ic">➕</span>Принять ОС</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-lbl">Движение</div>
+    <div class="nav-item" onclick="nav('move')"><span class="ic">🚚</span>Перемещения</div>
+    <div class="nav-item" onclick="nav('writeoff')"><span class="ic">🗑️</span>Списание</div>
+    <div class="nav-item" onclick="nav('amort')"><span class="ic">📉</span>Амортизация</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-lbl">Инвентаризация</div>
+    <div class="nav-item" onclick="nav('inventory')"><span class="ic">📋</span>Инвентаризация</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-lbl">Отчёты</div>
+    <div class="nav-item" onclick="nav('reports')"><span class="ic">📄</span>Отчёты</div>
+    <div class="nav-item" onclick="nav('alerts')"><span class="ic">🔔</span>Уведомления <span id="alert-badge" style="display:none;background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:auto"></span></div>
+  </div>
+  <div class="nav-group" id="admin-nav" style="display:none">
+    <div class="nav-lbl">Администратор</div>
+    <div class="nav-item" onclick="nav('qrgen')"><span class="ic">📷</span>Генерация QR</div>
+    <div class="nav-item" onclick="nav('users')"><span class="ic">🔑</span>Пользователи</div>
+    <div class="nav-item" onclick="nav('depts')"><span class="ic">🏗️</span>Подразделения</div>
+    <div class="nav-item" onclick="nav('storage')"><span class="ic">📦</span>Места хранения</div>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="nav-item" onclick="doLogout()" style="padding:8px 0;border-left:none"><span class="ic">🚪</span>Выйти</div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-t">Дашборд</div>
+    <div style="display:flex;gap:9px;align-items:center">
+      <button class="btn btn-gold btn-sm" onclick="openAddModal()">＋ Принять ОС</button>
+    </div>
+  </div>
+
+  <!-- ДАШБОРД -->
+  <div class="page active" id="page-dashboard">
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="kpi-lbl">Всего</div><div class="kpi-val" id="kv-total">—</div><div class="kpi-sub">объектов</div></div>
+      <div class="kpi-card gold"><div class="kpi-lbl">ОС</div><div class="kpi-val" id="kv-os">—</div><div class="kpi-sub">основных средств</div></div>
+      <div class="kpi-card green"><div class="kpi-lbl">Инвентарь</div><div class="kpi-val" id="kv-inv">—</div><div class="kpi-sub">ИНВ</div></div>
+      <div class="kpi-card"><div class="kpi-lbl">На балансе</div><div class="kpi-val" id="kv-active">—</div><div class="kpi-sub">активных</div></div>
+      <div class="kpi-card gold"><div class="kpi-lbl">Общая стоимость</div><div class="kpi-val" id="kv-cost">—</div><div class="kpi-sub">сум</div></div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head" style="background:var(--navy);color:#fff"><span style="font-weight:600;font-size:13px">📦 По подразделениям</span></div>
+      <table><thead><tr><th>Подразделение</th><th>Объектов</th><th>Доля</th></tr></thead>
+      <tbody id="dept-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- РЕЕСТР -->
+  <div class="page" id="page-list">
+    <div class="tbl-wrap">
+      <div class="tbl-head">
+        <div class="search-box"><span>🔍</span><input type="text" id="s-q" placeholder="Поиск по названию, инв. номеру, ответственному..." oninput="applyFlt()"></div>
+        <select class="flt" id="s-dept" onchange="applyFlt()"><option value="">Все подразделения</option><option>Производство</option><option>Завод СЭЗ</option><option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option></select>
+        <select class="flt" id="s-type" onchange="applyFlt()"><option value="">ОС + ИНВ</option><option>ОС</option><option>ИНВ</option></select>
+        <select class="flt" id="s-state" onchange="applyFlt()"><option value="">Все статусы</option><option>Балансда</option><option>Захирада</option><option>Списан</option></select>
+        <button class="btn btn-outline btn-sm" onclick="clearFlt()">Сбросить</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Инв. номер</th><th>Наименование</th><th>Тип</th><th>Вид</th><th>Подразделение</th><th>Ответственный</th><th>Стоимость</th><th>Статус</th><th>QR</th></tr></thead>
+          <tbody id="os-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pgn" id="pgn"></div>
+    </div>
+  </div>
+
+  <!-- ДОБАВЛЕНИЕ -->
+  <div class="page" id="page-add">
+    <div style="max-width:700px">
+      <div class="tbl-wrap" style="padding:22px">
+        <div class="fsec-t" style="font-size:14px;margin-bottom:18px;color:var(--navy)">📥 Принятие нового ОС / Инвентаря</div>
+        <div id="add-page-form"></div>
+        <div style="display:flex;gap:9px;margin-top:18px">
+          <button class="btn btn-primary" onclick="submitAdd('page')">💾 Сохранить</button>
+          <button class="btn btn-outline" onclick="nav('list')">Отмена</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ПЕРЕМЕЩЕНИЯ -->
+  <div class="page" id="page-move">
+    <div style="display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="openMoveModal()">🚚 Новый акт перемещения</button>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head" style="background:var(--navy);color:#fff"><span style="font-weight:600;font-size:13px">🚚 История перемещений</span></div>
+      <div style="overflow-x:auto">
+        <table><thead><tr><th>Дата</th><th>Номер акта</th><th>Инв. номер</th><th>Наименование</th><th>Откуда</th><th>Куда</th><th>Ответственный</th><th>Основание</th></tr></thead>
+        <tbody id="move-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- СПИСАНИЕ -->
+  <div class="page" id="page-writeoff">
+    <div style="margin-bottom:18px">
+      <button class="btn btn-danger" onclick="openWriteoffModal()">🗑️ Акт списания</button>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head" style="background:#742a2a;color:#fff"><span style="font-weight:600;font-size:13px">🗑️ Списанные объекты</span></div>
+      <div style="overflow-x:auto">
+        <table><thead><tr><th>Дата</th><th>Номер акта</th><th>Инв. номер</th><th>Наименование</th><th>Подразделение</th><th>Причина</th><th>Остаток стоим.</th></tr></thead>
+        <tbody id="wo-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- АМОРТИЗАЦИЯ -->
+  <div class="page" id="page-amort">
+    <div style="margin-bottom:18px;display:flex;gap:9px;align-items:center">
+      <button class="btn btn-primary btn-sm" id="accrue-btn" onclick="accrueNow()" style="display:none">📅 Начислить за текущий месяц</button>
+      <span style="font-size:12px;color:var(--t3)" id="amort-hint">История начислений амортизации</span>
+    </div>
+    <div class="tbl-wrap">
+      <div style="overflow-x:auto">
+        <table><thead><tr><th>Инв. номер</th><th>Наименование</th><th>Год</th><th>Мес.</th><th>Нач. стоимость</th><th>За месяц</th><th>Накоплено</th><th>Остаток</th></tr></thead>
+        <tbody id="amort-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR ГЕНЕРАЦИЯ (admin) -->
+  <div class="page" id="page-qrgen">
+    <div class="tbl-wrap" style="padding:24px;max-width:560px">
+      <div class="fsec-t" style="font-size:14px;margin-bottom:18px">📷 Массовая генерация QR для существующих ОС</div>
+      <p style="font-size:13px;color:var(--t2);margin-bottom:18px;line-height:1.6">
+        Для ОС из старого Excel-файла QR-коды не были сгенерированы автоматически.
+        Нажми кнопку — приложение сгенерирует QR для объектов без QR-кода порциями по 50 штук.
+      </p>
+      <div class="qr-progress" id="qr-progress" style="display:none">
+        <div style="font-size:13px;font-weight:600;color:var(--navy)" id="qr-msg">Обработка...</div>
+        <div class="qr-bar-wrap"><div class="qr-bar" id="qr-bar" style="width:0%"></div></div>
+        <div style="font-size:12px;color:var(--t3)" id="qr-detail"></div>
+      </div>
+      <div style="display:flex;gap:9px;margin-top:16px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="startQRGen()">🚀 Запустить генерацию (50 шт.)</button>
+        <button class="btn btn-outline" onclick="startQRGen(200)">⚡ Большая партия (200 шт.)</button>
+      </div>
+      <div style="margin-top:18px;font-size:12px;color:var(--t3)">
+        ⚠️ Генерация выполняется порциями во избежание таймаута Apps Script (30 сек).<br>
+        После каждой партии нажмите снова пока все объекты не получат QR.
+      </div>
+    </div>
+  </div>
+
+  <!-- ИНВЕНТАРИЗАЦИЯ -->
+  <div class="page" id="page-inventory">
+    <div style="display:flex;gap:9px;margin-bottom:18px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-primary" id="inv-create-btn" onclick="openCreateInvModal()" style="display:none">➕ Новая инвентаризация</button>
+      <span style="font-size:12px;color:var(--t3)">Нажмите на строку для просмотра деталей и отчёта</span>
+    </div>
+    <div class="tbl-wrap" style="margin-bottom:20px">
+      <div class="tbl-head" style="background:var(--navy);color:#fff;justify-content:space-between">
+        <span style="font-weight:600;font-size:13px">📋 Инвентаризации</span>
+      </div>
+      <table><thead><tr><th>№</th><th>Название</th><th>Дата начала</th><th>Закрыта</th><th>Подразделение</th><th>Статус</th><th>Всего</th><th>Найдено</th><th>Не найдено</th><th></th></tr></thead>
+      <tbody id="inv-tbody"></tbody></table>
+    </div>
+
+    <!-- Детали инвентаризации -->
+    <div id="inv-detail" style="display:none">
+      <div class="tbl-wrap" style="margin-bottom:14px">
+        <div class="tbl-head" style="justify-content:space-between;flex-wrap:wrap;gap:9px">
+          <span style="font-weight:600;font-size:14px" id="inv-detail-title">Детали инвентаризации</span>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" onclick="printInvAct()">🖨️ Печать акта</button>
+            <button class="btn btn-primary btn-sm" onclick="showInvReport()">📊 Отчёт</button>
+            <button class="btn btn-danger btn-sm" id="inv-close-btn" onclick="closeCurrentInv()">🔒 Закрыть инвентаризацию</button>
+          </div>
+        </div>
+        <!-- Сводка -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0;border-bottom:1px solid var(--b)">
+          <div style="padding:14px 18px;border-right:1px solid var(--b)">
+            <div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">Всего объектов</div>
+            <div style="font-size:24px;font-weight:800;color:var(--navy)" id="inv-stat-total">—</div>
+          </div>
+          <div style="padding:14px 18px;border-right:1px solid var(--b)">
+            <div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">Найдено ✅</div>
+            <div style="font-size:24px;font-weight:800;color:var(--green)" id="inv-stat-found">—</div>
+          </div>
+          <div style="padding:14px 18px;border-right:1px solid var(--b)">
+            <div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">Не найдено ❌</div>
+            <div style="font-size:24px;font-weight:800;color:var(--red)" id="inv-stat-missed">—</div>
+          </div>
+          <div style="padding:14px 18px">
+            <div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">Излишки ⚠️</div>
+            <div style="font-size:24px;font-weight:800;color:var(--amber)" id="inv-stat-surplus">—</div>
+          </div>
+        </div>
+        <!-- Прогресс -->
+        <div style="padding:12px 18px;border-bottom:1px solid var(--b)">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t3);margin-bottom:5px">
+            <span>Прогресс сканирования</span><span id="inv-pct">0%</span>
+          </div>
+          <div style="height:8px;background:var(--b);border-radius:4px">
+            <div id="inv-progress-bar" style="height:8px;background:var(--green);border-radius:4px;width:0%;transition:width .4s"></div>
+          </div>
+        </div>
+        <!-- Фильтр и таблица результатов -->
+        <div class="tbl-head">
+          <select class="flt" id="inv-flt-status" onchange="filterInvDetail()">
+            <option value="">Все</option>
+            <option value="Найдено">✅ Найдено</option>
+            <option value="Ожидается">❌ Не найдено</option>
+            <option value="Излишек">⚠️ Излишек</option>
+          </select>
+          <span style="font-size:12px;color:var(--t3)" id="inv-filter-count"></span>
+        </div>
+        <div style="overflow-x:auto">
+          <table><thead><tr>
+            <th>Инв. номер</th><th>Наименование</th><th>Подразделение</th>
+            <th>Ожид. адрес</th><th>Факт. адрес</th><th>Состояние</th>
+            <th>Статус</th><th>Дата скан.</th><th>Примечание</th>
+          </tr></thead>
+          <tbody id="inv-res-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛ: СОЗДАТЬ ИНВЕНТАРИЗАЦИЮ -->
+  <div class="modal-bg" id="modal-create-inv">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-h"><h2>➕ Новая инвентаризация</h2><button onclick="closeModal('modal-create-inv')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t2)">✕</button></div>
+      <div class="modal-b">
+        <div class="fg">
+          <div class="field ff"><label>Название инвентаризации *</label>
+            <input type="text" id="ci-name" placeholder="Напр: Плановая инв. июнь 2026"></div>
+          <div class="field ff"><label>Подразделение</label>
+            <select id="ci-dept">
+              <option value="">Все подразделения</option>
+              <option>Производство</option><option>Завод СЭЗ</option>
+              <option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option>
+            </select>
+            <div class="fhint">Оставьте пустым для инвентаризации всех подразделений</div>
+          </div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b);border-radius:9px;padding:12px 14px;font-size:12.5px;color:var(--t2);margin-top:8px">
+          💡 После создания инвентаризации сотрудники смогут сканировать QR-коды объектов камерой телефона и подтверждать наличие прямо на странице карточки.
+        </div>
+      </div>
+      <div class="modal-f">
+        <button class="btn btn-outline" onclick="closeModal('modal-create-inv')">Отмена</button>
+        <button class="btn btn-primary" onclick="submitCreateInv()">📋 Создать</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ПЕЧАТЬ АКТА (скрытый блок) -->
+  <div id="print-act" style="display:none">
+    <div id="print-act-content"></div>
+  </div>
+
+
+  <!-- УВЕДОМЛЕНИЯ -->
+  <div class="page" id="page-alerts">
+    <div class="kpi-row" style="margin-bottom:18px">
+      <div class="kpi-card red"><div class="kpi-lbl">Истёк срок службы</div><div class="kpi-val" id="al-danger">—</div><div class="kpi-sub">требуют внимания</div></div>
+      <div class="kpi-card gold"><div class="kpi-lbl">Полностью амортизированы</div><div class="kpi-val" id="al-warning">—</div><div class="kpi-sub">остаток ≈ 0</div></div>
+      <div class="kpi-card"><div class="kpi-lbl">Истекают скоро</div><div class="kpi-val" id="al-info">—</div><div class="kpi-sub">в течение года</div></div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head" style="background:#742a2a;color:#fff"><span style="font-weight:600;font-size:13px">🔔 Список уведомлений</span></div>
+      <div style="overflow-x:auto">
+        <table><thead><tr><th>Тип</th><th>Инв. номер</th><th>Наименование</th><th>Подразделение</th><th>Сообщение</th><th>Дата истечения</th></tr></thead>
+        <tbody id="alerts-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ОТЧЁТЫ -->
+  <div class="page" id="page-reports">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+
+      <!-- Сводный отчёт по подразделению -->
+      <div class="tbl-wrap" style="padding:22px">
+        <div class="fsec-t" style="font-size:14px;margin-bottom:14px">📊 Сводный отчёт по подразделению</div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Подразделение</label>
+          <select id="rep-dept" class="flt" style="width:100%">
+            <option value="">Все подразделения</option>
+            <option>Производство</option><option>Завод СЭЗ</option>
+            <option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="genDeptReport()">📄 Сформировать и печать</button>
+      </div>
+
+      <!-- Реестр ОС для печати -->
+      <div class="tbl-wrap" style="padding:22px">
+        <div class="fsec-t" style="font-size:14px;margin-bottom:14px">📋 Реестр ОС для печати</div>
+        <div class="fg" style="margin-bottom:12px">
+          <div class="field">
+            <label>Подразделение</label>
+            <select id="rep-reg-dept" class="flt" style="width:100%">
+              <option value="">Все</option>
+              <option>Производство</option><option>Завод СЭЗ</option>
+              <option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Тип</label>
+            <select id="rep-reg-type" class="flt" style="width:100%">
+              <option value="">ОС + ИНВ</option><option>ОС</option><option>ИНВ</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="genRegistryReport()">📄 Печать реестра</button>
+      </div>
+
+      <!-- Карточки пакетом -->
+      <div class="tbl-wrap" style="padding:22px">
+        <div class="fsec-t" style="font-size:14px;margin-bottom:14px">🃏 Карточки ОС пакетом</div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Подразделение</label>
+          <select id="rep-card-dept" class="flt" style="width:100%">
+            <option value="">Все подразделения</option>
+            <option>Производство</option><option>Завод СЭЗ</option>
+            <option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option>
+          </select>
+        </div>
+        <div style="font-size:12px;color:var(--t3);margin-bottom:12px">Откроется страница для печати всех карточек сразу (A5 горизонтальный)</div>
+        <button class="btn btn-primary" style="width:100%" onclick="genBatchCards()">🖨️ Печать карточек</button>
+      </div>
+
+      <!-- Наклейки 58x40 -->
+      <div class="tbl-wrap" style="padding:22px">
+        <div class="fsec-t" style="font-size:14px;margin-bottom:14px">🏷️ Наклейки 58×40 мм</div>
+        <div style="font-size:12px;color:var(--t2);margin-bottom:14px;line-height:1.6;background:var(--s2);border-radius:8px;padding:10px 12px;border:1px solid var(--b)">
+          Для термопринтера на самоклеющейся бумаге.<br>
+          На каждой наклейке: <strong>QR-код, инв. номер, название, ответственный, адрес, подразделение</strong>
+        </div>
+        <button class="btn btn-gold" style="width:100%" onclick="openLabels()">🏷️ Открыть печать наклеек</button>
+      </div>
+
+      <!-- Отчёт по местам хранения -->
+      <div class="tbl-wrap" style="padding:22px">
+        <div class="fsec-t" style="font-size:14px;margin-bottom:14px">📦 Отчёт по местам хранения</div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Подразделение</label>
+          <select id="rep-stor-dept" class="flt" style="width:100%">
+            <option value="">Все подразделения</option>
+            <option>Производство</option><option>Завод СЭЗ</option>
+            <option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="genStorageReport()">📄 Сформировать</button>
+      </div>
+
+      <!-- Отчёт по ответственным лицам -->
+      <div class="tbl-wrap" style="padding:22px">
+        <div class="fsec-t" style="font-size:14px;margin-bottom:14px">👤 Отчёт по ответственным лицам</div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Подразделение</label>
+          <select id="rep-resp-dept" class="flt" style="width:100%">
+            <option value="">Все подразделения</option>
+            <option>Производство</option><option>Завод СЭЗ</option>
+            <option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="genResponsibleReport()">📄 Сформировать</button>
+      </div>
+
+      <!-- Отчёт по амортизации -->
+      <div class="tbl-wrap" style="padding:22px">
+        <div class="fsec-t" style="font-size:14px;margin-bottom:14px">📉 Отчёт по амортизации за период</div>
+        <div class="fg" style="margin-bottom:12px">
+          <div class="field">
+            <label>Год с</label>
+            <input type="number" id="rep-amort-from" placeholder="2023" min="2000" max="2030" style="padding:8px 10px;border:1.5px solid var(--b);border-radius:8px;font-size:13px;background:var(--s2)">
+          </div>
+          <div class="field">
+            <label>Год по</label>
+            <input type="number" id="rep-amort-to" placeholder="2026" min="2000" max="2030" style="padding:8px 10px;border:1.5px solid var(--b);border-radius:8px;font-size:13px;background:var(--s2)">
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="genAmortReport()">📄 Сформировать</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ПОДРАЗДЕЛЕНИЯ (admin) -->
+  <div class="page" id="page-depts">
+    <div style="display:flex;gap:9px;margin-bottom:18px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="openAddDeptModal()">➕ Добавить подразделение/подподразделение</button>
+    </div>
+    <div id="depts-content"></div>
+  </div>
+
+  <!-- МОДАЛ: ДОБАВИТЬ ПОДРАЗДЕЛЕНИЕ -->
+  <div class="modal-bg" id="modal-add-dept">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-h"><h2>🏗️ Добавить подразделение</h2><button onclick="closeModal('modal-add-dept')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t2)">✕</button></div>
+      <div class="modal-b">
+        <div class="fg">
+          <div class="field ff">
+            <label>Подразделение *</label>
+            <input type="text" id="ad-dept" list="ad-dept-list" placeholder="Производство">
+            <datalist id="ad-dept-list">
+              <option>Производство</option><option>Завод СЭЗ</option>
+              <option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option>
+            </datalist>
+          </div>
+          <div class="field ff">
+            <label>Подподразделение</label>
+            <input type="text" id="ad-subdept" placeholder="Линия 1, Склад, Бухгалтерия...">
+            <div class="fhint">Оставьте пустым если добавляете только основное подразделение</div>
+          </div>
+          <div class="field ff">
+            <label>Описание</label>
+            <input type="text" id="ad-desc" placeholder="Краткое описание">
+          </div>
+        </div>
+      </div>
+      <div class="modal-f">
+        <button class="btn btn-outline" onclick="closeModal('modal-add-dept')">Отмена</button>
+        <button class="btn btn-primary" onclick="submitAddDept()">💾 Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- МЕСТА ХРАНЕНИЯ -->
+  <div class="page" id="page-storage">
+    <div style="display:flex;gap:9px;margin-bottom:18px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="openAddStorageModal()">➕ Добавить место хранения</button>
+    </div>
+    <div id="storage-content"></div>
+  </div>
+
+  <!-- МОДАЛ: ДОБАВИТЬ МЕСТО ХРАНЕНИЯ -->
+  <div class="modal-bg" id="modal-add-storage">
+    <div class="modal" style="max-width:460px">
+      <div class="modal-h"><h2>📦 Добавить место хранения</h2><button onclick="closeModal('modal-add-storage')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t2)">✕</button></div>
+      <div class="modal-b">
+        <div class="fg">
+          <div class="field ff">
+            <label>Подразделение *</label>
+            <select id="as-dept">
+              <option value="">— выберите —</option>
+              <option>Производство</option><option>Завод СЭЗ</option>
+              <option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option>
+            </select>
+          </div>
+          <div class="field ff">
+            <label>Название места хранения *</label>
+            <input type="text" id="as-name" placeholder="Напр: Цех Линия 1, Склад №2">
+          </div>
+          <div class="field ff">
+            <label>Описание</label>
+            <input type="text" id="as-desc" placeholder="Краткое описание">
+          </div>
+        </div>
+      </div>
+      <div class="modal-f">
+        <button class="btn btn-outline" onclick="closeModal('modal-add-storage')">Отмена</button>
+        <button class="btn btn-primary" onclick="submitAddStorage()">💾 Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛ: ИЗМЕНИТЬ ОС (ответственный + место хранения) -->
+  <div class="modal-bg" id="modal-edit">
+    <div class="modal" style="max-width:500px">
+      <div class="modal-h"><h2>✏️ Изменить ОС</h2><button onclick="closeModal('modal-edit')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t2)">✕</button></div>
+      <div class="modal-b">
+        <div style="background:var(--s2);border-radius:9px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--t2)">
+          <span id="edit-inv" style="font-weight:700;color:var(--navy)"></span> — <span id="edit-name"></span>
+        </div>
+        <div class="fg">
+          <div class="field ff">
+            <label>Ответственное лицо</label>
+            <select id="edit-resp">
+              <option value="">— выберите —</option>
+            </select>
+            <div class="fhint">Или введите вручную:</div>
+            <input type="text" id="edit-resp-manual" placeholder="ФИО ответственного" style="margin-top:6px">
+          </div>
+          <div class="field ff">
+            <label>Место хранения (Адрес)</label>
+            <select id="edit-storage">
+              <option value="">— выберите —</option>
+            </select>
+            <div class="fhint">Или введите вручную:</div>
+            <input type="text" id="edit-storage-manual" placeholder="Напр: Цех Линия 1, стол 3" style="margin-top:6px">
+          </div>
+        </div>
+      </div>
+      <div class="modal-f">
+        <button class="btn btn-outline" onclick="closeModal('modal-edit')">Отмена</button>
+        <button class="btn btn-primary" onclick="submitEdit()">💾 Сохранить изменения</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ПОЛЬЗОВАТЕЛИ (admin) -->
+  <div class="page" id="page-users">
+    <div style="margin-bottom:14px;display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="openCreateUserModal()">➕ Создать пользователя</button>
+      <button class="btn btn-outline btn-sm" onclick="openChangeOwnPassModal()">🔒 Сменить свой пароль</button>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head" style="background:var(--navy);color:#fff"><span style="font-weight:600;font-size:13px">🔑 Пользователи системы</span></div>
+      <table><thead><tr><th>Логин</th><th>ФИО</th><th>Подразделение</th><th>Роль</th><th>Последний вход</th><th>Статус</th><th>Действия</th></tr></thead>
+      <tbody id="users-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- МОДАЛ: СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ -->
+  <div class="modal-bg" id="modal-create-user">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-h"><h2>➕ Новый пользователь</h2><button onclick="closeModal('modal-create-user')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t2)">✕</button></div>
+      <div class="modal-b">
+        <div class="fg">
+          <div class="field"><label>Логин *</label><input type="text" id="cu-login" placeholder="latin_login" autocomplete="off"></div>
+          <div class="field"><label>Пароль *</label><input type="password" id="cu-pass" placeholder="минимум 4 символа" autocomplete="new-password"></div>
+          <div class="field ff"><label>ФИО</label><input type="text" id="cu-fio" placeholder="Полное имя"></div>
+          <div class="field"><label>Подразделение *</label>
+            <select id="cu-dept"><option value="">— выберите —</option>
+              <option>Производство</option><option>Завод СЭЗ</option>
+              <option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option><option>Все</option>
+            </select>
+          </div>
+          <div class="field"><label>Роль</label>
+            <select id="cu-role"><option value="user">Пользователь</option><option value="admin">Администратор</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-f">
+        <button class="btn btn-outline" onclick="closeModal('modal-create-user')">Отмена</button>
+        <button class="btn btn-primary" onclick="submitCreateUser()">💾 Создать</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛ: СМЕНА СВОЕГО ПАРОЛЯ -->
+  <div class="modal-bg" id="modal-own-pass">
+    <div class="modal" style="max-width:400px">
+      <div class="modal-h"><h2>🔒 Смена пароля</h2><button onclick="closeModal('modal-own-pass')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t2)">✕</button></div>
+      <div class="modal-b">
+        <div class="fg">
+          <div class="field ff"><label>Текущий пароль *</label><input type="password" id="op-old" placeholder="Введите текущий пароль"></div>
+          <div class="field ff"><label>Новый пароль *</label><input type="password" id="op-new" placeholder="Минимум 4 символа"></div>
+          <div class="field ff"><label>Повторите новый пароль *</label><input type="password" id="op-new2" placeholder="Повторите пароль"></div>
+        </div>
+      </div>
+      <div class="modal-f">
+        <button class="btn btn-outline" onclick="closeModal('modal-own-pass')">Отмена</button>
+        <button class="btn btn-primary" onclick="submitChangeOwnPass()">🔒 Изменить пароль</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ДЕТАЛЬНАЯ ПАНЕЛЬ -->
+<div class="dp" id="dp">
+  <div class="dp-head">
+    <div><div class="dp-inv" id="dp-inv">—</div><div class="dp-name" id="dp-name">—</div><div class="dp-dept" id="dp-dept">—</div></div>
+    <button onclick="closeDP()" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:5px 9px;cursor:pointer;font-size:13px">✕</button>
+  </div>
+  <div class="dp-body" id="dp-body"></div>
+  <div class="dp-foot">
+    <button class="btn btn-outline btn-sm" onclick="printCard()">🖨️ Печать</button>
+    <button class="btn btn-gold btn-sm" onclick="openEditModal()">✏️ Изменить</button>
+    <button class="btn btn-outline btn-sm" onclick="openMoveFromDetail()">🚚 Переместить</button>
+    <button class="btn btn-danger btn-sm" id="dp-wo-btn" onclick="openWriteoffFromDetail()">🗑️ Списать</button>
+  </div>
+</div>
+<div id="dp-bg" onclick="closeDP()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:140"></div>
+
+<!-- МОДАЛ: ДОБАВЛЕНИЕ ОС -->
+<div class="modal-bg" id="modal-add">
+  <div class="modal">
+    <div class="modal-h"><h2>➕ Принять ОС / Инвентарь</h2><button onclick="closeModal('modal-add')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t2)">✕</button></div>
+    <div class="modal-b"><div id="add-modal-form"></div></div>
+    <div class="modal-f">
+      <button class="btn btn-outline" onclick="closeModal('modal-add')">Отмена</button>
+      <button class="btn btn-primary" onclick="submitAdd('modal')">💾 Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛ: ПЕРЕМЕЩЕНИЕ -->
+<div class="modal-bg" id="modal-move">
+  <div class="modal">
+    <div class="modal-h"><h2>🚚 Акт перемещения ОС</h2><button onclick="closeModal('modal-move')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t2)">✕</button></div>
+    <div class="modal-b">
+      <div class="fsec">
+        <div class="fsec-t">Объект перемещения</div>
+        <div class="fg">
+          <div class="field">
+            <label>Инвентарный номер *</label>
+            <input type="text" id="mv-inv" placeholder="Выберите из реестра или введите" list="mv-inv-list" oninput="onMvInvChange()">
+            <datalist id="mv-inv-list"></datalist>
+          </div>
+          <div class="field">
+            <label>Наименование</label>
+            <input type="text" id="mv-name" placeholder="Заполнится автоматически" readonly style="background:#f0f4f8">
+          </div>
+        </div>
+      </div>
+      <div class="fsec">
+        <div class="fsec-t">Перемещение</div>
+        <div class="fg">
+          <div class="field">
+            <label>Откуда *</label>
+            <input type="text" id="mv-from" readonly style="background:#f0f4f8;color:var(--t2)">
+          </div>
+          <div class="field">
+            <label>Куда (подразделение) *</label>
+            <select id="mv-to" onchange="loadMvStorage()">
+              <option value="">— выберите —</option>
+              <option>Производство</option><option>Завод СЭЗ</option>
+              <option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Место хранения</label>
+            <select id="mv-storage">
+              <option value="">— выберите место —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Новое ответственное лицо</label>
+            <input type="text" id="mv-resp" list="resp-list" placeholder="ФИО">
+            <datalist id="resp-list">
+              <option>Абдувахидов Шухрат</option><option>Механик</option><option>Шерзод Толиьовыч</option>
+              <option>Шукриллаев А.</option><option>Эшонкулов Ф.</option><option>Касимов Ф.</option>
+              <option>Халиков Улмас</option><option>Азизов Мансурхон</option>
+            </datalist>
+          </div>
+          <div class="field">
+            <label>Основание</label>
+            <input type="text" id="mv-reason" placeholder="Приказ №..., распоряжение...">
+          </div>
+        </div>
+      </div>
+      <div class="act-preview" id="mv-preview" style="display:none">
+        <div class="act-preview-t">📄 Предпросмотр акта перемещения</div>
+        <div class="act-row"><span class="al">Объект</span><span class="av" id="pvw-name">—</span></div>
+        <div class="act-row"><span class="al">Инв. номер</span><span class="av" id="pvw-inv">—</span></div>
+        <div class="act-row"><span class="al">Откуда</span><span class="av" id="pvw-from">—</span></div>
+        <div class="act-row"><span class="al">Куда</span><span class="av" id="pvw-to">—</span></div>
+        <div class="act-row"><span class="al">Ответственный</span><span class="av" id="pvw-resp">—</span></div>
+        <div class="act-row"><span class="al">Дата</span><span class="av" id="pvw-date">—</span></div>
+      </div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-outline" onclick="closeModal('modal-move')">Отмена</button>
+      <button class="btn btn-primary" onclick="previewMove()">👁️ Предпросмотр</button>
+      <button class="btn btn-green" id="mv-confirm-btn" onclick="confirmMove()" style="display:none">✅ Подписать и сохранить акт</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛ: СПИСАНИЕ -->
+<div class="modal-bg" id="modal-wo">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-h"><h2>🗑️ Акт списания ОС</h2><button onclick="closeModal('modal-wo')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t2)">✕</button></div>
+    <div class="modal-b">
+      <div class="wo-warning">⚠️ Действие необратимо. ОС будет переведён в статус «Списан» и исключён из баланса.</div>
+      <div class="fg">
+        <div class="field ff">
+          <label>Инвентарный номер *</label>
+          <input type="text" id="wo-inv" placeholder="Введите или выберите из реестра" oninput="onWoInvChange()">
+        </div>
+        <div class="field ff">
+          <label>Наименование</label>
+          <input type="text" id="wo-name" readonly style="background:#f0f4f8">
+        </div>
+        <div class="field ff">
+          <label>Причина списания *</label>
+          <select id="wo-reason">
+            <option value="">— выберите причину —</option>
+            <option>Физический износ</option><option>Моральный износ</option>
+            <option>Авария/поломка</option><option>Кража/потеря</option>
+            <option>Продажа</option><option>Передача другой организации</option>
+            <option>Стихийное бедствие</option><option>Иное</option>
+          </select>
+        </div>
+        <div class="field ff">
+          <label>Примечание</label>
+          <textarea id="wo-note" placeholder="Дополнительные сведения..."></textarea>
+        </div>
+      </div>
+      <div class="act-preview" id="wo-preview" style="display:none">
+        <div class="act-preview-t">📄 Акт списания</div>
+        <div class="act-row"><span class="al">Объект</span><span class="av" id="wp-name">—</span></div>
+        <div class="act-row"><span class="al">Инв. номер</span><span class="av" id="wp-inv">—</span></div>
+        <div class="act-row"><span class="al">Подразделение</span><span class="av" id="wp-dept">—</span></div>
+        <div class="act-row"><span class="al">Остаточная стоимость</span><span class="av" id="wp-cost" style="color:var(--red)">—</span></div>
+        <div class="act-row"><span class="al">Причина</span><span class="av" id="wp-reason">—</span></div>
+      </div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-outline" onclick="closeModal('modal-wo')">Отмена</button>
+      <button class="btn btn-outline" onclick="previewWO()">👁️ Предпросмотр</button>
+      <button class="btn btn-danger" id="wo-confirm-btn" onclick="confirmWO()" style="display:none">🗑️ Подтвердить списание</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADER + TOAST -->
+<div id="loader"><div class="spinner"></div><div style="font-size:13px;color:var(--t2)">Загрузка...</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== СОСТОЯНИЕ =====================
+let TOKEN = localStorage.getItem('gl_token') || '';
+let SESSION = null;
+let allData = [];
+let filteredData = [];
+let currentPage = 1;
+const PAGE_SIZE = 30;
+let currentInv = null;
+
+// ===================== AUTH =====================
+function togglePass() {
+  const inp = document.getElementById('pass-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function doLogin() {
+  const login = (document.getElementById('login-input').value||'').trim();
+  const pass  = (document.getElementById('pass-input').value||'').trim();
+  const errEl = document.getElementById('login-err');
+  const btn   = document.getElementById('login-btn');
+  errEl.style.display = 'none';
+  if (!login) { errEl.textContent = 'Введите логин'; errEl.style.display = 'block'; return; }
+  if (!pass)  { errEl.textContent = 'Введите пароль'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Вход...';
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader(); btn.disabled = false; btn.textContent = 'Войти →';
+      if (res.ok) {
+        TOKEN = res.token;
+        SESSION = { login: res.login, fio: res.fio, dept: res.dept, role: res.role };
+        localStorage.setItem('gl_token', TOKEN);
+        localStorage.setItem('gl_sess', JSON.stringify(SESSION));
+        document.getElementById('login-screen').style.display = 'none';
+        initApp();
+      } else {
+        errEl.textContent = res.error || 'Неверный логин или пароль';
+        errEl.style.display = 'block';
+        document.getElementById('pass-input').value = '';
+        document.getElementById('pass-input').focus();
+      }
+    })
+    .withFailureHandler(err => {
+      hideLoader(); btn.disabled = false; btn.textContent = 'Войти →';
+      errEl.textContent = 'Ошибка связи: ' + err; errEl.style.display = 'block';
+    })
+    .loginByCredentials(login, pass);
+}
+
+function doLogout() {
+  if (!confirm('Выйти из системы?')) return;
+  google.script.run.withSuccessHandler(() => {}).logout(TOKEN);
+  _clearSession();
+}
+
+function _clearSession() {
+  TOKEN = ''; SESSION = null;
+  localStorage.removeItem('gl_token'); localStorage.removeItem('gl_sess');
+  location.reload();
+}
+
+// Централизованный обработчик ошибок сессии
+function handleServerError(err, context) {
+  hideLoader();
+  const msg = String(err || '');
+  if (msg.includes('Сессия истекла') || msg.includes('истекла')) {
+    toast('Сессия истекла — войдите снова', 'err');
+    setTimeout(_clearSession, 1500);
+  } else {
+    toast((context ? context + ': ' : '') + msg, 'err');
+  }
+}
+
+function initApp() {
+  const { fio, login, dept, role } = SESSION;
+  document.getElementById('sb-dept').textContent = fio || login || dept;
+  document.getElementById('sb-role').textContent = role === 'admin' ? 'Администратор' : dept;
+  if (role === 'admin') {
+    document.getElementById('admin-nav').style.display = 'block';
+    document.getElementById('accrue-btn').style.display = '';
+  }
+  if (role !== 'admin') {
+    const deptFlt = document.getElementById('s-dept');
+    if (deptFlt) deptFlt.style.display = 'none';
+  }
+  // Загрузить данные сразу при входе — нужно для Отчётов и Наклеек
+  loadDashboard();
+  loadAllDataBackground();
+}
+
+function loadAllDataBackground() {
+  google.script.run
+    .withSuccessHandler(res => {
+      if (res && res.ok) {
+        allData = res.data;
+        // Заполнить datalist для перемещений
+        const dl = document.getElementById('mv-inv-list');
+        if (dl) {
+          dl.innerHTML = '';
+          allData.filter(o => o['Состояния'] === 'Балансда').forEach(o => {
+            dl.innerHTML += '<option value="' + o['Инвентарный номер'] + '">' + o['Наименование'] + '</option>';
+          });
+        }
+      }
+    })
+    .withFailureHandler(() => {})
+    .getAllOS(TOKEN);
+}
+
+// ===================== НАВИГАЦИЯ =====================
+const PAGE_TITLES = { dashboard:'Дашборд', list:'Реестр ОС', add:'Принять ОС', move:'Перемещения', writeoff:'Списание', amort:'Амортизация', inventory:'Инвентаризация', reports:'Отчёты', alerts:'Уведомления', depts:'Подразделения', qrgen:'Генерация QR', users:'Пользователи' };
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) pageEl.classList.add('active');
+  document.getElementById('topbar-t').textContent = PAGE_TITLES[page] || page;
+  // Подсветить активный пункт меню по тексту onclick
+  document.querySelectorAll('.nav-item[onclick]').forEach(n => {
+    const fn = n.getAttribute('onclick') || '';
+    if (fn.includes("'" + page + "'")) n.classList.add('active');
+  });
+  const loaders = { dashboard:loadDashboard, list:loadList, move:loadMoves, writeoff:loadWriteoffs, amort:loadAmort, inventory:loadInventories, reports:loadReports, alerts:loadAlerts, depts:loadDepts, storage:loadStorage, users:loadUsers };
+  if (loaders[page]) loaders[page]();
+  if (page === 'add') renderAddForm('add-page-form');
+}
+
+// ===================== ДАШБОРД =====================
+
+// ===================== РЕЕСТР =====================
+function loadList() {
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res || !res.ok) {
+        if (res && (res.error||'').includes('истекла')) { toast('Сессия истекла — войдите снова','err'); setTimeout(_clearSession,1500); return; }
+        toast((res && res.error)||'Ошибка загрузки', 'err'); return;
+      }
+      allData = res.data;
+      // Заполнить datalist для перемещений
+      const dl = document.getElementById('mv-inv-list');
+      if (dl) { dl.innerHTML = ''; allData.filter(o=>o['Состояния']==='Балансда').forEach(o => { dl.innerHTML += `<option value="${o['Инвентарный номер']}">${o['Наименование']}</option>`; }); }
+      applyFlt();
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e, 'err'); })
+    .getAllOS(TOKEN);
+}
+
+function renderTable(data) {
+  const start = (currentPage-1)*PAGE_SIZE;
+  const slice = data.slice(start, start+PAGE_SIZE);
+  const tb = document.getElementById('os-tbody'); tb.innerHTML = '';
+  if (!slice.length) { tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--t3)">Ничего не найдено</td></tr>'; }
+  else slice.forEach(os => {
+    const inv = os['Инвентарный номер']||'';
+    const state = os['Состояния']||'';
+    const stateCls = state==='Балансда'?'b-on':state==='Списан'?'b-off':'b-res';
+    tb.innerHTML += `<tr onclick="openDP('${inv.replace(/'/g,"\\'")}')">
+      <td><span style="font-weight:700;color:var(--navy);font-size:12px">${inv}</span></td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${os['Наименование']||''}">${os['Наименование']||''}</td>
+      <td><span class="badge ${os['ОС/Инвентар']==='ОС'?'b-os':'b-inv'}">${os['ОС/Инвентар']||''}</span></td>
+      <td style="font-size:12px;color:var(--t2)">${os['Вид']||''}</td>
+      <td style="font-size:12px">${os['Подразделения']||''}</td>
+      <td style="font-size:12px">${os['Ответственный лицо']||''}</td>
+      <td style="font-size:12px;font-weight:500">${fmtN(os['Рыночный стоимость'])}</td>
+      <td><span class="badge ${stateCls}">${state}</span></td>
+      <td>${os['QR-код']?`<img src="${os['QR-код']}" style="width:26px;height:26px;border-radius:4px" title="QR">`:''}</td>
+    </tr>`;
+  });
+  renderPgn(data.length);
+}
+
+function renderPgn(total) {
+  const pages = Math.ceil(total/PAGE_SIZE);
+  const pg = document.getElementById('pgn');
+  pg.innerHTML = `<span class="pgn-info">${Math.min((currentPage-1)*PAGE_SIZE+1,total)}–${Math.min(currentPage*PAGE_SIZE,total)} из ${total}</span>`;
+  for (let i=1;i<=Math.min(pages,8);i++) pg.innerHTML+=`<button class="pg-btn${i===currentPage?' active':''}" onclick="goPage(${i})">${i}</button>`;
+}
+function goPage(n) { currentPage=n; renderTable(filteredData); }
+
+function applyFlt() {
+  const q=(document.getElementById('s-q')||{}).value||'';
+  const dept=(document.getElementById('s-dept')||{}).value||'';
+  const type=(document.getElementById('s-type')||{}).value||'';
+  const state=(document.getElementById('s-state')||{}).value||'';
+  filteredData = allData.filter(os => {
+    if (q) { const s=q.toLowerCase(); if(!((os['Наименование']||'').toLowerCase().includes(s)||(os['Инвентарный номер']||'').toLowerCase().includes(s)||(os['Ответственный лицо']||'').toLowerCase().includes(s))) return false; }
+    if (dept && os['Подразделения']!==dept) return false;
+    if (type && os['ОС/Инвентар']!==type) return false;
+    if (state && os['Состояния']!==state) return false;
+    return true;
+  });
+  currentPage=1; renderTable(filteredData);
+}
+function clearFlt() { ['s-q','s-dept','s-type','s-state'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';}); applyFlt(); }
+
+// ===================== ДЕТАЛЬНАЯ ПАНЕЛЬ =====================
+function openDP(inv) {
+  showLoader();
+  google.script.run
+    .withSuccessHandler(os => {
+      hideLoader();
+      if (!os) { toast('Объект не найден', 'err'); return; }
+      currentInv = inv;
+      document.getElementById('dp-inv').textContent = os['Инвентарный номер'];
+      document.getElementById('dp-name').textContent = os['Наименование'];
+      document.getElementById('dp-dept').textContent = (os['Подразделения']||'') + ' · ' + (os['ОС/Инвентар']||'') + ' · ' + (os['Состояния']||'');
+      const cardUrl = os['Ссылка на карточку']||'';
+      // Если cardUrl пустой — сгенерировать из текущего deployment URL
+var _cardUrl = cardUrl || '';
+if (!_cardUrl && inv) {
+  var _base = window.location.href.split('?')[0];
+  _cardUrl = _base + '?page=card&inv=' + encodeURIComponent(inv);
+}
+document.getElementById('dp-link').href = _cardUrl || '#';
+      // Показать/скрыть кнопку списания
+      document.getElementById('dp-wo-btn').style.display = os['Состояния']==='Списан' ? 'none' : '';
+      const photo = os['Фото URL']||'';
+      const qr = os['QR-код']||'';
+      const cost = parseFloat(os['Рыночный стоимость'])||0;
+      const pct = parseFloat(os['Амортизация %'])||0;
+      let html = photo
+        ? `<img src="${photo}" class="dp-photo" onerror="this.style.display='none'">`
+        : `<div class="dp-photo-ph">📷 Фото не загружено</div>`;
+      if (qr) html += `<div class="dp-qr"><img src="${qr}" alt="QR"><div class="dp-qr-lbl">Сканировать для открытия карточки</div></div>`;
+      html += '<div style="margin-top:10px">';
+      [['Инв. номер',os['Инвентарный номер']],['Тип',os['ОС/Инвентар']],['Вид',os['Вид']],
+       ['Подразделение',os['Подразделения']],['Ответственный',os['Ответственный лицо']],
+       ['Дата поступления',os['Дата поступление']],['Срок службы',(os['Полезный срок службы']||'—')+(os['Полезный срок службы']?' лет':'')],
+       ['Стоимость',fmtN(cost)+' сум'],['Амортизация',(pct*100).toFixed(0)+'% / год'],
+       ['Адрес',os['Адрес']||'—'],['Состояние',os['Состояния']],['Примечание',os['Примечание']||'—']
+      ].forEach(([l,v]) => { html+=`<div class="info-row"><span class="info-lbl">${l}</span><span class="info-val">${v||'—'}</span></div>`; });
+      html += '</div>';
+      document.getElementById('dp-body').innerHTML = html;
+      document.getElementById('dp').classList.add('open');
+      document.getElementById('dp-bg').style.display = 'block';
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getOSByInv(inv, TOKEN);
+}
+function closeDP() { document.getElementById('dp').classList.remove('open'); document.getElementById('dp-bg').style.display='none'; currentInv=null; }
+function printCard() {
+  if (!currentInv) { toast('Выберите объект','err'); return; }
+  const os = allData.find(o => o['Инвентарный номер'] === currentInv);
+  if (!os) { toast('Объект не найден в реестре','err'); return; }
+  const inv  = os['Инвентарный номер']||'';
+  const name = os['Наименование']||'';
+  const resp = os['Ответственный лицо']||'—';
+  const dept = os['Подразделения']||'';
+  const addr = os['Адрес']||'—';
+  const date = os['Дата поступление']||'—';
+  const cost = parseFloat(os['Рыночный стоимость'])||0;
+  const pct  = parseFloat(os['Амортизация %'])||0;
+  const state= os['Состояния']||'';
+  const vid  = os['Вид']||'';
+  const life = os['Полезный срок службы']||'';
+  const qr   = os['QR-код']||('https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(inv));
+  const w = window.open('','_blank','width=800,height=600');
+  if (!w) { toast('Разрешите всплывающие окна в браузере','err'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Карточка ${inv}</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:10mm;background:#fff}
+  .card{border:2px solid #1a3a5c;border-radius:6px;overflow:hidden;max-width:190mm}
+  .head{background:#1a3a5c;color:#fff;padding:8px 14px;display:flex;justify-content:space-between;align-items:center}
+  .head .brand{font-size:11px;font-weight:700}.head .inv{font-size:14px;font-weight:800;color:#d4a017}
+  .body{display:grid;grid-template-columns:110px 1fr}
+  .qr-col{padding:12px;border-right:1px solid #e0e0e0;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .qr-col img{width:90px;height:90px}.qr-lbl{font-size:8px;color:#888;text-align:center}
+  .info-col{padding:12px 14px}.obj-name{font-size:12px;font-weight:700;color:#1a3a5c;margin-bottom:8px;line-height:1.3}
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px}
+  .field .fl{font-size:8px;color:#888;text-transform:uppercase;letter-spacing:.3px}.field .fv{font-size:10px;font-weight:600;color:#222}
+  .foot{background:#f7f9fc;border-top:1px solid #e0e0e0;padding:6px 14px;display:flex;justify-content:space-between}
+  .foot-dept{font-size:10px;font-weight:700;color:#1a3a5c}.foot-state{font-size:10px;font-weight:600;color:#38a169}
+  .bottom{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #e0e0e0}
+  .photo-ph{height:100px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa;background:#f9f9f9;border-right:1px solid #e0e0e0}
+  .amort{padding:10px 14px}.amort-t{font-size:9px;font-weight:700;color:#1a3a5c;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+  .arow{display:flex;justify-content:space-between;font-size:9px;padding:3px 0;border-bottom:1px solid #f0f0f0}
+  .arow:last-child{border:none}.al{color:#888}.av{font-weight:600}
+  .btn-p{padding:7px 16px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;margin-bottom:8px}
+  @media print{body{padding:5mm}.btn-p{display:none}@page{size:A5 landscape;margin:5mm}}</style></head><body>
+  <button class="btn-p" onclick="window.print()">🖨️ Печать (A5 горизонтальный)</button>
+  <div class="card">
+    <div class="head"><span class="brand">🏭 GOLD LAVASH — Карточка ОС</span><span class="inv">${inv}</span></div>
+    <div class="body">
+      <div class="qr-col"><img src="${qr}" alt="QR" onerror="this.style.display='none'"><div class="qr-lbl">Сканировать для просмотра</div></div>
+      <div class="info-col">
+        <div class="obj-name">${name}</div>
+        <div class="fields">
+          <div class="field"><div class="fl">Ответственный</div><div class="fv">${resp}</div></div>
+          <div class="field"><div class="fl">Дата поступления</div><div class="fv">${date}</div></div>
+          <div class="field"><div class="fl">Стоимость</div><div class="fv">${cost.toLocaleString('ru-RU')} сум</div></div>
+          <div class="field"><div class="fl">Амортизация</div><div class="fv">${(pct*100).toFixed(0)}% / год</div></div>
+          <div class="field"><div class="fl">Вид</div><div class="fv">${vid||'—'}</div></div>
+          <div class="field"><div class="fl">Состояние</div><div class="fv">${state}</div></div>
+          <div class="field"><div class="fl">Адрес</div><div class="fv">${addr}</div></div>
+          <div class="field"><div class="fl">Срок службы</div><div class="fv">${life?life+' лет':'—'}</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="foot-dept">${dept} · ${os['ОС/Инвентар']||''}</span><span class="foot-state">${state}</span></div>
+    <div class="bottom">
+      <div class="photo-ph">📷 Фото не загружено</div>
+      <div class="amort">
+        <div class="amort-t">📉 Амортизация</div>
+        <div class="arow"><span class="al">Норма/год</span><span class="av">${(pct*100).toFixed(0)}%</span></div>
+        <div class="arow"><span class="al">Срок (лет)</span><span class="av">${life||'—'}</span></div>
+        <div class="arow"><span class="al">Нач. стоимость</span><span class="av">${cost.toLocaleString('ru-RU')} сум</span></div>
+      </div>
+    </div>
+  </div>
+  </body></html>`);
+  w.document.close();
+}
+function openMoveFromDetail() { closeDP(); openMoveModal(currentInv); }
+function openWriteoffFromDetail() { const inv=currentInv; closeDP(); openWriteoffModal(inv); }
+
+// ===================== ДОБАВЛЕНИЕ ОС =====================
+function addFormHTML(dept, role) {
+  const deptVal = role==='admin' ? '' : dept;
+  const deptDisabled = role!=='admin' ? 'readonly style="background:#f0f4f8"' : '';
+  return `<div class="fsec"><div class="fsec-t">Основная информация</div><div class="fg">
+    <div class="field ff"><label>Тип *</label><div style="display:flex;gap:14px">
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:400;font-size:13px"><input type="radio" name="os_type" value="ОС" checked> Основное средство (ОС)</label>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:400;font-size:13px"><input type="radio" name="os_type" value="ИНВ"> Инвентарь (ИНВ)</label>
+    </div></div>
+    <div class="field ff"><label>Наименование *</label><input type="text" id="f-name" placeholder="Полное наименование"></div>
+    <div class="field"><label>Вид *</label><select id="f-vid"><option value="">— выберите —</option>
+      <option>Ускуналар</option><option>Хоз. инвентар</option><option>Офис мебеллари</option>
+      <option>Инструмент</option><option>Авто машина</option><option>Хисоблаш техникалари</option>
+      <option>Совутиш жихоз ва иншоотлари</option><option>Кузатув Мосламси</option>
+      <option>Падносы</option><option>Бино ва иншоатлар</option><option>Комуникация линиялари</option>
+    </select></div>
+    <div class="field"><label>Подразделение *</label>
+      ${role==='admin'
+        ? `<select id="f-dept"><option value="">— выберите —</option><option>Производство</option><option>Завод СЭЗ</option><option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option></select>`
+        : `<input type="text" id="f-dept" value="${deptVal}" readonly style="background:#f0f4f8">`}
+    </div>
+    <div class="field"><label>Ответственное лицо *</label><input type="text" id="f-resp" list="resp-list2" placeholder="ФИО">
+      <datalist id="resp-list2"><option>Абдувахидов Шухрат</option><option>Механик</option><option>Шерзод Толиьовыч</option><option>Шукриллаев А.</option><option>Эшонкулов Ф.</option></datalist>
+    </div>
+    <div class="field"><label>Адрес / Место</label><input type="text" id="f-addr" placeholder="Напр: Цех Линия 1"></div>
+  </div></div>
+  <div class="fsec"><div class="fsec-t">Стоимость и амортизация</div><div class="fg">
+    <div class="field"><label>Дата поступления *</label><input type="date" id="f-date" value="${new Date().toISOString().split('T')[0]}"></div>
+    <div class="field"><label>Рыночная стоимость (сум) *</label><input type="number" id="f-cost" placeholder="0" min="0"></div>
+    <div class="field"><label>Срок службы (лет)</label><input type="number" id="f-life" placeholder="5" min="1"><div class="fhint">Для ОС — рекомендуется</div></div>
+    <div class="field"><label>Норма амортизации (% / год)</label><input type="number" id="f-amort" value="20" min="0" max="100" step="0.1"></div>
+    <div class="field"><label>Размер / Габариты</label><input type="text" id="f-size" placeholder="1.90x0.70x0.90"></div>
+    <div class="field"><label>Категория</label><input type="text" id="f-cat" placeholder="Доп. категория"></div>
+  </div></div>
+  <div class="fsec"><div class="fsec-t">Фото и примечание</div><div class="fg">
+    <div class="field ff">
+      <label>Фото объекта</label>
+      <div id="photo-upload-area" style="border:2px dashed var(--b2);border-radius:10px;padding:16px;text-align:center;background:var(--s2);cursor:pointer;transition:border .2s" onclick="triggerPhotoInput()" ondragover="event.preventDefault();this.style.borderColor='var(--navy)'" ondragleave="this.style.borderColor='var(--b2)'" ondrop="handlePhotoDrop(event)">
+        <div id="photo-preview-wrap" style="display:none;margin-bottom:10px">
+          <img id="photo-preview" src="" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--b)">
+          <button type="button" onclick="event.stopPropagation();clearPhoto()" style="display:block;margin:6px auto 0;background:none;border:none;color:var(--red);cursor:pointer;font-size:12px">✕ Удалить фото</button>
+        </div>
+        <div id="photo-placeholder">
+          <div style="font-size:32px;margin-bottom:8px">📷</div>
+          <div style="font-size:13px;font-weight:600;color:var(--navy)">Сфотографировать или выбрать файл</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:4px">Нажмите — откроется камера на телефоне</div>
+        </div>
+        <div id="photo-uploading" style="display:none">
+          <div style="font-size:13px;color:var(--t2)">⏳ Загрузка фото в Google Drive...</div>
+        </div>
+      </div>
+      <input type="file" id="photo-file-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoSelect(event)">
+      <input type="hidden" id="f-photo" value="">
+      <div class="fhint" id="photo-hint">JPG, PNG — фото сохранится в Google Drive в папку подразделения</div>
+    </div>
+    <div class="field ff"><label>Примечание</label><textarea id="f-note" placeholder="Любые заметки..."></textarea></div>
+  </div></div>`;
+}
+function renderAddForm(target) {
+  const el = document.getElementById(target);
+  if (el) el.innerHTML = addFormHTML(SESSION?.dept, SESSION?.role);
+}
+function openAddModal() { document.getElementById('modal-add').classList.add('open'); renderAddForm('add-modal-form'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function getAddFormData() {
+  const type = (document.querySelector('input[name="os_type"]:checked')||{}).value||'ОС';
+  const deptEl = document.getElementById('f-dept');
+  return {
+    type, name: (document.getElementById('f-name')?.value||'').trim(),
+    vid: document.getElementById('f-vid')?.value||'',
+    department: (deptEl?.tagName==='SELECT' ? deptEl.value : deptEl?.value)||'',
+    responsible: (document.getElementById('f-resp')?.value||'').trim(),
+    address: (document.getElementById('f-addr')?.value||'').trim(),
+    dateIn: document.getElementById('f-date')?.value||'',
+    cost: parseFloat(document.getElementById('f-cost')?.value||0),
+    lifespan: document.getElementById('f-life')?.value||'',
+    amortPercent: parseFloat(document.getElementById('f-amort')?.value||20)/100,
+    size: (document.getElementById('f-size')?.value||'').trim(),
+    category: (document.getElementById('f-cat')?.value||'').trim(),
+    photoUrl: (document.getElementById('f-photo')?.value||'').trim(),
+    note: (document.getElementById('f-note')?.value||'').trim(),
+  };
+}
+
+function submitAdd(src) {
+  const d = getAddFormData();
+  if (!d.name) { toast('Укажите наименование','err'); return; }
+  if (!d.vid) { toast('Выберите вид','err'); return; }
+  if (!d.department) { toast('Укажите подразделение','err'); return; }
+  if (!d.responsible) { toast('Укажите ответственное лицо','err'); return; }
+  if (!d.cost || d.cost<=0) { toast('Укажите стоимость','err'); return; }
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) {
+        if (src==='modal') closeModal('modal-add');
+        toast('✅ Принято! Инв. номер: '+res.invNum, 'ok');
+        showAddResult(res);
+        if (allData.length) loadList();
+      } else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .addOS(d, TOKEN);
+}
+
+function showAddResult(res) {
+  document.getElementById('dp-inv').textContent = res.invNum;
+  document.getElementById('dp-name').textContent = 'ОС принято успешно';
+  document.getElementById('dp-dept').textContent = '';
+  document.getElementById('dp-link').href = res.cardUrl;
+  document.getElementById('dp-body').innerHTML = `<div style="text-align:center;padding:20px">
+    <div style="font-size:30px;font-weight:800;color:var(--navy);margin-bottom:6px">${res.invNum}</div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:16px">Инвентарный номер присвоен</div>
+    ${res.qrUrl?`<img src="${res.qrUrl}" style="width:150px;height:150px;border-radius:10px;border:2px solid var(--b);margin-bottom:14px"><br>`:''}
+    <a href="${res.cardUrl}" target="_blank" class="btn btn-primary btn-sm">🔗 Открыть карточку</a>
+  </div>`;
+  document.getElementById('dp').classList.add('open');
+  document.getElementById('dp-bg').style.display = 'block';
+}
+
+// ===================== ПЕРЕМЕЩЕНИЯ =====================
+function openMoveModal(presetInv) {
+  document.getElementById('modal-move').classList.add('open');
+  document.getElementById('mv-preview').style.display = 'none';
+  document.getElementById('mv-confirm-btn').style.display = 'none';
+  if (presetInv) {
+    document.getElementById('mv-inv').value = presetInv;
+    onMvInvChange();
+  } else {
+    document.getElementById('mv-inv').value = '';
+    document.getElementById('mv-name').value = '';
+    document.getElementById('mv-from').value = '';
+    document.getElementById('mv-to').value = '';
+  }
+}
+
+function onMvInvChange() {
+  const inv = (document.getElementById('mv-inv').value||'').trim();
+  const os = allData.find(o => o['Инвентарный номер']===inv);
+  if (os) {
+    document.getElementById('mv-name').value = os['Наименование']||'';
+    document.getElementById('mv-from').value = os['Подразделения']||'';
+  } else {
+    document.getElementById('mv-name').value = '';
+    document.getElementById('mv-from').value = '';
+  }
+}
+
+function previewMove() {
+  const inv = (document.getElementById('mv-inv').value||'').trim();
+  const to = document.getElementById('mv-to').value;
+  const from = document.getElementById('mv-from').value;
+  const name = document.getElementById('mv-name').value;
+  const resp = document.getElementById('mv-resp').value;
+  if (!inv) { toast('Выберите объект','err'); return; }
+  if (!to) { toast('Выберите подразделение назначения','err'); return; }
+  if (from === to) { toast('Откуда и куда одинаковы','err'); return; }
+  document.getElementById('pvw-name').textContent = name;
+  document.getElementById('pvw-inv').textContent = inv;
+  document.getElementById('pvw-from').textContent = from;
+  document.getElementById('pvw-to').textContent = to;
+  document.getElementById('pvw-resp').textContent = resp||'Не изменяется';
+  document.getElementById('pvw-date').textContent = new Date().toLocaleDateString('ru-RU');
+  document.getElementById('mv-preview').style.display = 'block';
+  document.getElementById('mv-confirm-btn').style.display = '';
+}
+
+function confirmMove() {
+  const data = {
+    invNum: document.getElementById('mv-inv').value.trim(),
+    name: document.getElementById('mv-name').value,
+    from: document.getElementById('mv-from').value,
+    to: document.getElementById('mv-to').value,
+    responsible: document.getElementById('mv-resp').value,
+    reason: document.getElementById('mv-reason').value,
+  };
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) {
+        closeModal('modal-move');
+        toast('✅ Акт '+res.actNum+' сохранён', 'ok');
+        loadList(); loadMoves();
+      } else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .addMovement(data, TOKEN);
+}
+
+function loadMoves() {
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      const tb = document.getElementById('move-tbody'); tb.innerHTML = '';
+      if (!res.data.length) { tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--t3)">Перемещений ещё не было</td></tr>'; return; }
+      res.data.forEach(r => {
+        tb.innerHTML += `<tr>
+          <td style="font-size:12px">${r['Дата']}</td>
+          <td><span style="font-weight:700;font-size:11px;color:var(--navy)">${r['Номер акта']||'—'}</span></td>
+          <td style="font-size:12px;font-weight:600;color:var(--navy)">${r['Инв. номер']}</td>
+          <td style="font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r['Наименование']}</td>
+          <td style="font-size:12px">${r['Откуда']}</td>
+          <td style="font-size:12px;font-weight:600;color:var(--green)">${r['Куда']}</td>
+          <td style="font-size:12px">${r['Ответств. лицо']||'—'}</td>
+          <td style="font-size:12px;color:var(--t3)">${r['Основание']||'—'}</td>
+        </tr>`;
+      });
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getMovements(TOKEN, null);
+}
+
+// ===================== СПИСАНИЕ =====================
+function openWriteoffModal(presetInv) {
+  document.getElementById('modal-wo').classList.add('open');
+  document.getElementById('wo-preview').style.display = 'none';
+  document.getElementById('wo-confirm-btn').style.display = 'none';
+  document.getElementById('wo-inv').value = presetInv||'';
+  if (presetInv) onWoInvChange();
+}
+
+function onWoInvChange() {
+  const inv = (document.getElementById('wo-inv').value||'').trim();
+  const os = allData.find(o => o['Инвентарный номер']===inv);
+  document.getElementById('wo-name').value = os ? os['Наименование']||'' : '';
+}
+
+function previewWO() {
+  const inv = (document.getElementById('wo-inv').value||'').trim();
+  const reason = document.getElementById('wo-reason').value;
+  const os = allData.find(o => o['Инвентарный номер']===inv);
+  if (!inv||!os) { toast('Введите корректный инв. номер','err'); return; }
+  if (!reason) { toast('Выберите причину списания','err'); return; }
+  if (os['Состояния']==='Списан') { toast('Объект уже списан','err'); return; }
+  document.getElementById('wp-name').textContent = os['Наименование'];
+  document.getElementById('wp-inv').textContent = inv;
+  document.getElementById('wp-dept').textContent = os['Подразделения'];
+  document.getElementById('wp-cost').textContent = fmtN(os['Рыночный стоимость'])+' сум (рыночная)';
+  document.getElementById('wp-reason').textContent = reason;
+  document.getElementById('wo-preview').style.display = 'block';
+  document.getElementById('wo-confirm-btn').style.display = '';
+}
+
+function confirmWO() {
+  const data = { invNum: document.getElementById('wo-inv').value.trim(), reason: document.getElementById('wo-reason').value, note: document.getElementById('wo-note')?.value||'' };
+  if (!confirm('Подтвердить списание '+data.invNum+'?\nДействие необратимо!')) return;
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) {
+        closeModal('modal-wo');
+        toast('✅ Акт списания '+res.actNum+' сохранён', 'ok');
+        loadList(); loadWriteoffs();
+      } else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .writeOffOS(data, TOKEN);
+}
+
+function loadWriteoffs() {
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      const tb = document.getElementById('wo-tbody'); tb.innerHTML = '';
+      if (!res.data.length) { tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--t3)">Списаний ещё не было</td></tr>'; return; }
+      res.data.forEach(r => {
+        tb.innerHTML += `<tr>
+          <td style="font-size:12px">${r['Дата']}</td>
+          <td><span style="font-weight:700;font-size:11px;color:var(--red)">${r['Номер акта']||'—'}</span></td>
+          <td style="font-size:12px;font-weight:600;color:var(--navy)">${r['Инв. номер']}</td>
+          <td style="font-size:12px">${r['Наименование']}</td>
+          <td style="font-size:12px">${r['Подразделение']}</td>
+          <td style="font-size:12px;color:var(--red)">${r['Причина']}</td>
+          <td style="font-size:12px;font-weight:600">${fmtN(r['Остаточная стоимость'])} сум</td>
+        </tr>`;
+      });
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getWriteOffs(TOKEN);
+}
+
+// ===================== АМОРТИЗАЦИЯ =====================
+function loadAmort() {
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      const tb = document.getElementById('amort-tbody'); tb.innerHTML = '';
+      if (!res.data.length) { tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--t3)">Нет данных — начислите амортизацию</td></tr>'; return; }
+      res.data.slice().reverse().forEach(h => {
+        tb.innerHTML += `<tr>
+          <td style="font-size:12px;font-weight:600;color:var(--navy)">${h['Инв. номер']}</td>
+          <td style="font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h['Наименование']}</td>
+          <td>${h['Год']}</td><td>${h['Месяц']}</td>
+          <td>${fmtN(h['Стоимость нач.'])}</td>
+          <td style="color:var(--amber);font-weight:600">${fmtN(h['Амортизация за месяц'])}</td>
+          <td>${fmtN(h['Накопл. амортизация'])}</td>
+          <td style="color:var(--green);font-weight:600">${fmtN(h['Остаточная стоимость'])}</td>
+        </tr>`;
+      });
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getAllAmort(TOKEN);
+}
+
+function accrueNow() {
+  if (!confirm('Начислить амортизацию за текущий месяц для всех активных ОС?')) return;
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => { hideLoader(); toast('✅ Начислено для '+res.count+' объектов','ok'); loadAmort(); })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .accrueMonthlyDepreciation(TOKEN);
+}
+
+// ===================== QR ГЕНЕРАЦИЯ =====================
+function startQRGen(batch) {
+  const sz = batch||50;
+  document.getElementById('qr-progress').style.display = 'block';
+  document.getElementById('qr-msg').textContent = 'Генерация QR-кодов...';
+  document.getElementById('qr-bar').style.width = '30%';
+  document.getElementById('qr-detail').textContent = 'Обрабатываем порцию '+sz+' объектов...';
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      document.getElementById('qr-bar').style.width = '100%';
+      document.getElementById('qr-msg').textContent = '✅ Готово!';
+      document.getElementById('qr-detail').textContent = `Сгенерировано: ${res.updated} шт. Осталось без QR: ${res.remaining} шт.`;
+      toast('QR сгенерировано: '+res.updated,'ok');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); document.getElementById('qr-msg').textContent = '❌ Ошибка'; })
+    .generateQRForExisting(TOKEN, sz);
+}
+
+// ===================== ПОЛЬЗОВАТЕЛИ =====================
+function loadUsers() {
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      const tb = document.getElementById('users-tbody'); tb.innerHTML = '';
+      res.users.forEach(u => {
+        const roleBadge = u['Роль']==='admin'
+          ? '<span class="badge b-admin">Администратор</span>'
+          : '<span class="badge b-user">Пользователь</span>';
+        const activeBtn = u['Активен']
+          ? `<button class="btn btn-outline btn-sm" onclick="toggleUser('${u['Логин']}',false)" style="color:var(--red);border-color:var(--red)">🚫 Откл.</button>`
+          : `<button class="btn btn-green btn-sm" onclick="toggleUser('${u['Логин']}',true)">✅ Вкл.</button>`;
+        tb.innerHTML += `<tr>
+          <td><strong style="color:var(--navy)">${u['Логин']}</strong></td>
+          <td>${u['ФИО']||'—'}</td>
+          <td>${u['Подразделение']}</td>
+          <td>${roleBadge}</td>
+          <td style="font-size:11px;color:var(--t3)">${u['Последний вход']||'Никогда'}</td>
+          <td>${u['Активен'] ? '<span class="badge b-on">Активен</span>' : '<span class="badge b-off">Отключён</span>'}</td>
+          <td style="display:flex;gap:5px;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" onclick="changeUserPass('${u['Логин']}')">🔑 Пароль</button>
+            ${activeBtn}
+          </td>
+        </tr>`;
+      });
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getAllUsers(TOKEN);
+}
+
+function changeUserPass(login) {
+  const newPass = prompt(`Новый пароль для "${login}" (минимум 4 символа):`);
+  if (!newPass || newPass.length < 4) { toast('Пароль минимум 4 символа','err'); return; }
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) toast('✅ Пароль для "'+login+'" изменён','ok');
+      else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .updateUserPassword(TOKEN, login, newPass);
+}
+
+function toggleUser(login, active) {
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) { toast(active ? '✅ Активирован' : '🚫 Отключён','ok'); loadUsers(); }
+      else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .toggleUserActive(TOKEN, login, active);
+}
+
+function openCreateUserModal() {
+  document.getElementById('modal-create-user').classList.add('open');
+  ['cu-login','cu-pass','cu-fio'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('cu-dept').value = '';
+  document.getElementById('cu-role').value = 'user';
+}
+
+function submitCreateUser() {
+  const data = {
+    login: (document.getElementById('cu-login').value||'').trim(),
+    password: (document.getElementById('cu-pass').value||'').trim(),
+    fio: (document.getElementById('cu-fio').value||'').trim(),
+    dept: document.getElementById('cu-dept').value,
+    role: document.getElementById('cu-role').value,
+  };
+  if (!data.login) { toast('Введите логин','err'); return; }
+  if (!data.password || data.password.length<4) { toast('Пароль минимум 4 символа','err'); return; }
+  if (!data.dept) { toast('Выберите подразделение','err'); return; }
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) { closeModal('modal-create-user'); toast('✅ Пользователь создан','ok'); loadUsers(); }
+      else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .createUser(TOKEN, data);
+}
+
+function openChangeOwnPassModal() {
+  document.getElementById('modal-own-pass').classList.add('open');
+  ['op-old','op-new','op-new2'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function submitChangeOwnPass() {
+  const oldP = (document.getElementById('op-old').value||'').trim();
+  const newP = (document.getElementById('op-new').value||'').trim();
+  const newP2 = (document.getElementById('op-new2').value||'').trim();
+  if (!oldP) { toast('Введите текущий пароль','err'); return; }
+  if (!newP || newP.length<4) { toast('Новый пароль минимум 4 символа','err'); return; }
+  if (newP !== newP2) { toast('Пароли не совпадают','err'); return; }
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) { closeModal('modal-own-pass'); toast('✅ Пароль изменён. Войдите заново.','ok'); setTimeout(doLogout,2000); }
+      else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .changeOwnPassword(TOKEN, oldP, newP);
+}
+
+// ===================== УТИЛИТЫ =====================
+function fmtN(n) { const v=parseFloat(n)||0; return v.toLocaleString('ru-RU',{maximumFractionDigits:0}); }
+function showLoader() { document.getElementById('loader').classList.add('show'); }
+function hideLoader() { document.getElementById('loader').classList.remove('show'); }
+function toast(msg, type) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show '+(type||'');
+  setTimeout(()=>el.classList.remove('show'),3800);
+}
+
+
+// ===================== ИНВЕНТАРИЗАЦИЯ =====================
+let currentInvNum = null;
+let invDetailData = [];
+
+function loadInventories() {
+  showLoader();
+  // Показать кнопку создания только для admin
+  if (SESSION && SESSION.role === 'admin') {
+    document.getElementById('inv-create-btn').style.display = '';
+  }
+  document.getElementById('inv-detail').style.display = 'none';
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      const tb = document.getElementById('inv-tbody'); tb.innerHTML = '';
+      if (!res.data.length) {
+        tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--t3)">Инвентаризаций ещё нет</td></tr>';
+        return;
+      }
+      res.data.forEach(r => {
+        const statusCls = r['Статус']==='Открыта' ? 'b-on' : 'b-off';
+        const total = parseInt(r['Итого объектов'])||0;
+        const found = parseInt(r['Найдено'])||0;
+        const pct = total ? Math.round(found/total*100) : 0;
+        tb.innerHTML += `<tr onclick="openInvDetail('${r['№ инв-ции']}')" style="cursor:pointer">
+          <td style="font-weight:700;color:var(--navy);font-size:12px">${r['№ инв-ции']}</td>
+          <td style="font-weight:500">${r['Название']}</td>
+          <td style="font-size:12px">${r['Дата начала']}</td>
+          <td style="font-size:12px;color:var(--t3)">${r['Дата закрытия']||'—'}</td>
+          <td style="font-size:12px">${r['Подразделение']}</td>
+          <td><span class="badge ${statusCls}">${r['Статус']}</span></td>
+          <td style="font-weight:600">${total}</td>
+          <td style="color:var(--green);font-weight:600">${found}</td>
+          <td style="color:var(--red);font-weight:600">${r['Не найдено']||0}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:60px;height:6px;background:var(--b);border-radius:3px">
+                <div style="width:${pct}%;height:6px;background:var(--green);border-radius:3px"></div>
+              </div>
+              <span style="font-size:11px;color:var(--t3)">${pct}%</span>
+            </div>
+          </td>
+        </tr>`;
+      });
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getInventories(TOKEN);
+}
+
+function openInvDetail(invNum) {
+  currentInvNum = invNum;
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      invDetailData = res.data;
+      document.getElementById('inv-detail').style.display = 'block';
+      document.getElementById('inv-detail-title').textContent = 'Детали: ' + invNum;
+      // Кнопку закрыть — только admin и только если открыта
+      const inv = (document.getElementById('inv-tbody').querySelectorAll('tr'));
+      document.getElementById('inv-close-btn').style.display = SESSION.role==='admin' ? '' : 'none';
+      renderInvDetail(res.data);
+      document.getElementById('inv-detail').scrollIntoView({ behavior: 'smooth' });
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getInventoryDetail(TOKEN, invNum);
+}
+
+function renderInvDetail(data) {
+  const flt = document.getElementById('inv-flt-status').value;
+  const rows = flt ? data.filter(r => r['Статус']===flt) : data;
+  const found   = data.filter(r=>r['Статус']==='Найдено').length;
+  const missed  = data.filter(r=>r['Статус']==='Ожидается').length;
+  const surplus = data.filter(r=>r['Статус']==='Излишек').length;
+  const total   = data.length;
+  const pct = total ? Math.round((found+surplus)/total*100) : 0;
+  document.getElementById('inv-stat-total').textContent   = total;
+  document.getElementById('inv-stat-found').textContent   = found;
+  document.getElementById('inv-stat-missed').textContent  = missed;
+  document.getElementById('inv-stat-surplus').textContent = surplus;
+  document.getElementById('inv-pct').textContent = pct + '%';
+  document.getElementById('inv-progress-bar').style.width = pct + '%';
+  document.getElementById('inv-filter-count').textContent = rows.length + ' объектов';
+
+  const tb = document.getElementById('inv-res-tbody'); tb.innerHTML = '';
+  rows.forEach(r => {
+    const stMap = { 'Найдено':'b-on','Ожидается':'b-off','Излишек':'b-res' };
+    tb.innerHTML += `<tr>
+      <td style="font-size:12px;font-weight:600;color:var(--navy)">${r['Инв. номер']}</td>
+      <td style="font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r['Наименование']}</td>
+      <td style="font-size:12px">${r['Подразделение']}</td>
+      <td style="font-size:12px;color:var(--t3)">${r['Ожидаемый адрес']||'—'}</td>
+      <td style="font-size:12px;font-weight:500;color:var(--navy)">${r['Фактический адрес']||'—'}</td>
+      <td style="font-size:12px">${r['Состояние факт.']||'—'}</td>
+      <td><span class="badge ${stMap[r['Статус']]||'b-res'}">${r['Статус']}</span></td>
+      <td style="font-size:11px;color:var(--t3)">${r['Дата сканирования']||'—'}</td>
+      <td style="font-size:12px;color:var(--t3)">${r['Примечание']||'—'}</td>
+    </tr>`;
+  });
+}
+
+function filterInvDetail() { renderInvDetail(invDetailData); }
+
+function closeCurrentInv() {
+  if (!currentInvNum) return;
+  if (!confirm('Закрыть инвентаризацию '+currentInvNum+'?\nПосле закрытия сканирование невозможно.')) return;
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) { toast('✅ Инвентаризация закрыта','ok'); loadInventories(); }
+      else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .closeInventory(TOKEN, currentInvNum);
+}
+
+// ---- Создание инвентаризации ----
+function openCreateInvModal() {
+  document.getElementById('modal-create-inv').classList.add('open');
+  document.getElementById('ci-name').value = '';
+  document.getElementById('ci-dept').value = '';
+}
+
+function submitCreateInv() {
+  const name = (document.getElementById('ci-name').value||'').trim();
+  const dept = document.getElementById('ci-dept').value;
+  if (!name) { toast('Введите название','err'); return; }
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) {
+        closeModal('modal-create-inv');
+        toast('✅ Инвентаризация '+res.invNum+' создана ('+res.total+' объектов)','ok');
+        loadInventories();
+      } else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .createInventory(TOKEN, { name, dept });
+}
+
+// ---- Отчёт ----
+function showInvReport() {
+  if (!currentInvNum) return;
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      const w = window.open('', '_blank');
+      w.document.write(buildReportHTML(res));
+      w.document.close();
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getInventoryReport(TOKEN, currentInvNum);
+}
+
+function buildReportHTML(res) {
+  const { inv, found, missed, surplus } = res;
+  const pct = inv['Итого объектов'] ? Math.round(found.length/parseInt(inv['Итого объектов'])*100) : 0;
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Отчёт ${inv['№ инв-ции']}</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1a2332;font-size:13px}
+  h1{font-size:20px;color:#1a3a5c;margin-bottom:4px}
+  .sub{color:#718096;font-size:12px;margin-bottom:24px}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .kpi-c{border:1px solid #e2e8f0;border-radius:8px;padding:14px;text-align:center}
+  .kpi-c .v{font-size:28px;font-weight:800}.kpi-c .l{font-size:11px;color:#718096;text-transform:uppercase;letter-spacing:.5px}
+  .kpi-c.g .v{color:#38a169}.kpi-c.r .v{color:#e53e3e}.kpi-c.a .v{color:#d69e2e}
+  table{width:100%;border-collapse:collapse;margin-bottom:20px}
+  thead th{background:#1a3a5c;color:#fff;padding:8px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase}
+  td{padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px}
+  .s-ok{background:#f0fff4;color:#276749;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700}
+  .s-no{background:#fff5f5;color:#c53030;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700}
+  .s-ex{background:#fffbeb;color:#92400e;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700}
+  h2{font-size:14px;color:#1a3a5c;margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid #e2e8f0}
+  @media print{body{padding:15px}}</style></head><body>
+  <h1>Отчёт по инвентаризации ${inv['№ инв-ции']}</h1>
+  <div class="sub">${inv['Название']} · Подразделение: ${inv['Подразделение']} · Дата: ${inv['Дата начала']}${inv['Дата закрытия']?' — '+inv['Дата закрытия']:' (открыта)'}</div>
+  <div class="kpi">
+    <div class="kpi-c"><div class="v">${inv['Итого объектов']}</div><div class="l">Всего</div></div>
+    <div class="kpi-c g"><div class="v">${found.length}</div><div class="l">Найдено</div></div>
+    <div class="kpi-c r"><div class="v">${missed.length}</div><div class="l">Не найдено</div></div>
+    <div class="kpi-c a"><div class="v">${surplus.length}</div><div class="l">Излишки</div></div>
+  </div>`;
+
+  if (missed.length) {
+    html += `<h2>❌ Не найдено (${missed.length})</h2><table><thead><tr><th>Инв. номер</th><th>Наименование</th><th>Подразделение</th><th>Ожид. адрес</th></tr></thead><tbody>`;
+    missed.forEach(r => { html += `<tr><td>${r['Инв. номер']}</td><td>${r['Наименование']}</td><td>${r['Подразделение']}</td><td>${r['Ожидаемый адрес']||'—'}</td></tr>`; });
+    html += '</tbody></table>';
+  }
+  if (found.length) {
+    html += `<h2>✅ Найдено (${found.length})</h2><table><thead><tr><th>Инв. номер</th><th>Наименование</th><th>Факт. адрес</th><th>Состояние</th><th>Скан.</th></tr></thead><tbody>`;
+    found.forEach(r => { html += `<tr><td>${r['Инв. номер']}</td><td>${r['Наименование']}</td><td>${r['Фактический адрес']||'—'}</td><td>${r['Состояние факт.']||'—'}</td><td style="font-size:11px;color:#718096">${r['Дата сканирования']||'—'}</td></tr>`; });
+    html += '</tbody></table>';
+  }
+  if (surplus.length) {
+    html += `<h2>⚠️ Излишки (${surplus.length})</h2><table><thead><tr><th>Инв. номер</th><th>Факт. адрес</th><th>Состояние</th><th>Скан.</th></tr></thead><tbody>`;
+    surplus.forEach(r => { html += `<tr><td>${r['Инв. номер']}</td><td>${r['Фактический адрес']||'—'}</td><td>${r['Состояние факт.']||'—'}</td><td style="font-size:11px;color:#718096">${r['Дата сканирования']||'—'}</td></tr>`; });
+    html += '</tbody></table>';
+  }
+  html += `<div style="margin-top:30px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#718096">
+    Создан: ${new Date().toLocaleString('ru-RU')} · GOLD LAVASH — Система учёта ОС</div>
+  <script>window.print();<\/script></body></html>`;
+  return html;
+}
+
+// ---- Печать акта ----
+function printInvAct() {
+  if (!currentInvNum) return;
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      const w = window.open('', '_blank');
+      w.document.write(buildActHTML(res));
+      w.document.close();
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getInventoryReport(TOKEN, currentInvNum);
+}
+
+function buildActHTML(res) {
+  const { inv, rows } = res;
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Акт ${inv['№ инв-ции']}</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Times New Roman',serif;padding:25px 35px;color:#000;font-size:12px}
+  .head{text-align:center;margin-bottom:20px}
+  .head h1{font-size:16px;font-weight:bold;text-transform:uppercase;margin-bottom:4px}
+  .head .sub{font-size:12px}
+  .meta{margin-bottom:16px;line-height:1.8}
+  .meta b{font-weight:bold}
+  table{width:100%;border-collapse:collapse;margin-bottom:16px}
+  th,td{border:1px solid #000;padding:5px 7px;font-size:11px}
+  th{background:#f0f0f0;font-weight:bold;text-align:center}
+  .sign-row{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:30px}
+  .sign-box{border-top:1px solid #000;padding-top:6px;font-size:11px}
+  @media print{body{padding:15px 20px}}</style></head><body>
+  <div class="head">
+    <div style="font-size:11px;text-align:right">УТВЕРЖДАЮ:<br>Директор GOLD LAVASH<br>_____________ /________/<br>«___» __________ 2026 г.</div>
+    <h1>АКТ ИНВЕНТАРИЗАЦИИ № ${inv['№ инв-ции']}</h1>
+    <div class="sub">${inv['Название']}</div>
+  </div>
+  <div class="meta">
+    <b>Подразделение:</b> ${inv['Подразделение']}<br>
+    <b>Дата начала:</b> ${inv['Дата начала']}&nbsp;&nbsp;&nbsp;
+    <b>Дата закрытия:</b> ${inv['Дата закрытия']||'(не закрыта)'}<br>
+    <b>Создал:</b> ${inv['Создал']}&nbsp;&nbsp;&nbsp;
+    <b>Всего объектов:</b> ${inv['Итого объектов']}&nbsp;&nbsp;
+    <b>Найдено:</b> ${inv['Найдено']}&nbsp;&nbsp;
+    <b>Не найдено:</b> ${inv['Не найдено']}
+  </div>
+  <table>
+    <thead><tr><th>№</th><th>Инв. номер</th><th>Наименование</th><th>Подразд.</th><th>Ожид. адрес</th><th>Факт. адрес</th><th>Состояние</th><th>Результат</th><th>Дата скан.</th></tr></thead>
+    <tbody>`;
+  rows.forEach((r,i) => {
+    html += `<tr>
+      <td style="text-align:center">${i+1}</td>
+      <td>${r['Инв. номер']}</td>
+      <td>${r['Наименование']}</td>
+      <td>${r['Подразделение']}</td>
+      <td>${r['Ожидаемый адрес']||'—'}</td>
+      <td>${r['Фактический адрес']||'—'}</td>
+      <td>${r['Состояние факт.']||'—'}</td>
+      <td style="text-align:center;font-weight:bold;${r['Статус']==='Найдено'?'color:green':r['Статус']==='Ожидается'?'color:red':'color:orange'}">${r['Статус']}</td>
+      <td style="font-size:10px">${r['Дата сканирования']||'—'}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>
+  <div class="sign-row">
+    <div class="sign-box">Председатель комиссии:<br><br>_____________ /________________/</div>
+    <div class="sign-box">Член комиссии:<br><br>_____________ /________________/</div>
+  </div>
+  <div style="margin-top:16px;font-size:10px;color:#666">Документ сформирован автоматически системой учёта ОС GOLD LAVASH · ${new Date().toLocaleString('ru-RU')}</div>
+  <script>window.print();<\/script></body></html>`;
+  return html;
+}
+
+
+// ===================== ЭТАП 4: ДАШБОРД С ГРАФИКАМИ =====================
+
+function loadDashboard() {
+  showLoader();
+  google.script.run
+    .withSuccessHandler(d => {
+      hideLoader();
+      if (!d || !d.ok) {
+        if (d && (d.error||'').includes('истекла')) { toast('Сессия истекла — войдите снова','err'); setTimeout(_clearSession,1500); return; }
+        toast((d && d.error)||'Ошибка','err'); return;
+      }
+      document.getElementById('kv-total').textContent  = d.total;
+      document.getElementById('kv-os').textContent     = d.os;
+      document.getElementById('kv-inv').textContent    = d.inv;
+      document.getElementById('kv-active').textContent = d.active;
+      document.getElementById('kv-cost').textContent   = fmtN(d.totalCost);
+      const tb = document.getElementById('dept-tbody'); tb.innerHTML = '';
+      Object.entries(d.byDept).sort((a,b)=>b[1]-a[1]).forEach(([dept,cnt]) => {
+        const pct = d.total ? ((cnt/d.total)*100).toFixed(1) : 0;
+        tb.innerHTML += `<tr><td>${dept}</td><td><strong>${cnt}</strong></td>
+          <td><div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;height:6px;background:var(--b);border-radius:3px">
+              <div style="width:${pct}%;height:6px;background:var(--navy);border-radius:3px"></div></div>
+            <span style="font-size:12px;color:var(--t3);min-width:34px">${pct}%</span></div></td></tr>`;
+      });
+      // Загрузить данные для графиков
+      loadDashboardCharts();
+      // Загрузить уведомления (для бейджа)
+      loadAlertsBadge();
+    })
+    .withFailureHandler(e => handleServerError(e,'Дашборд'))
+    .getSummary(TOKEN);
+}
+
+function loadDashboardCharts() {
+  google.script.run
+    .withSuccessHandler(d => {
+      if (!d || !d.ok) return;
+      renderCharts(d);
+    })
+    .withFailureHandler(() => {})
+    .getDashboardCharts(TOKEN);
+}
+
+function renderCharts(d) {
+  // График 1: Стоимость по подразделениям (горизонтальные бары)
+  const maxCost = d.byCost.length ? d.byCost[0][1] : 1;
+  let costHtml = `<div style="background:var(--s);border-radius:var(--r);border:1px solid var(--b);box-shadow:var(--sh);padding:20px;margin-top:18px">
+    <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:16px">💰 Балансовая стоимость по подразделениям</div>`;
+  d.byCost.forEach(([dept, cost]) => {
+    const pct = maxCost ? (cost/maxCost*100).toFixed(1) : 0;
+    costHtml += `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="font-weight:500">${dept}</span>
+        <span style="color:var(--t3)">${fmtN(cost)} сум</span>
+      </div>
+      <div style="height:10px;background:var(--b);border-radius:5px">
+        <div style="width:${pct}%;height:10px;background:linear-gradient(90deg,var(--navy),var(--navy2));border-radius:5px;transition:width .6s"></div>
+      </div>
+    </div>`;
+  });
+  costHtml += '</div>';
+
+  // График 2: По видам
+  const maxVid = d.byVid.length ? d.byVid[0][1] : 1;
+  let vidHtml = `<div style="background:var(--s);border-radius:var(--r);border:1px solid var(--b);box-shadow:var(--sh);padding:20px;margin-top:18px">
+    <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:16px">📦 Стоимость по видам ОС</div>`;
+  const colors = ['#1a3a5c','#234d7a','#2d6099','#d4a017','#e6b82a','#38a169','#2f855a','#e53e3e'];
+  d.byVid.forEach(([vid, cost], i) => {
+    const pct = maxVid ? (cost/maxVid*100).toFixed(1) : 0;
+    vidHtml += `<div style="margin-bottom:9px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+        <span>${vid}</span><span style="color:var(--t3)">${fmtN(cost)} сум</span>
+      </div>
+      <div style="height:8px;background:var(--b);border-radius:4px">
+        <div style="width:${pct}%;height:8px;background:${colors[i%colors.length]};border-radius:4px"></div>
+      </div>
+    </div>`;
+  });
+  vidHtml += '</div>';
+
+  // График 3: Поступления по годам (вертикальные бары)
+  const maxYear = d.byYear.length ? Math.max(...d.byYear.map(y=>y[1])) : 1;
+  let yearHtml = `<div style="background:var(--s);border-radius:var(--r);border:1px solid var(--b);box-shadow:var(--sh);padding:20px;margin-top:18px">
+    <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:16px">📅 Поступления по годам</div>
+    <div style="display:flex;align-items:flex-end;gap:8px;height:100px">`;
+  d.byYear.forEach(([yr, cnt]) => {
+    const h = maxYear ? Math.round(cnt/maxYear*90) : 0;
+    yearHtml += `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:4px">
+      <span style="font-size:11px;font-weight:600;color:var(--navy)">${cnt}</span>
+      <div style="width:100%;height:${h}px;background:var(--navy);border-radius:3px 3px 0 0;min-height:4px"></div>
+      <span style="font-size:10px;color:var(--t3)">${yr}</span>
+    </div>`;
+  });
+  yearHtml += '</div></div>';
+
+  // График 4: Амортизация пирог (css)
+  const { totalOriginal, totalAccum, totalResidual } = d.amort;
+  const amortPct = totalOriginal ? Math.round(totalAccum/totalOriginal*100) : 0;
+  const amortHtml = `<div style="background:var(--s);border-radius:var(--r);border:1px solid var(--b);box-shadow:var(--sh);padding:20px;margin-top:18px">
+    <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:16px">📉 Амортизация ОС</div>
+    <div style="position:relative;margin:0 auto 16px;width:120px;height:120px">
+      <svg viewBox="0 0 36 36" style="width:120px;height:120px;transform:rotate(-90deg)">
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--b)" stroke-width="3.8"/>
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--amber)" stroke-width="3.8"
+          stroke-dasharray="${amortPct} ${100-amortPct}" stroke-dashoffset="0"/>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div style="font-size:20px;font-weight:800;color:var(--navy)">${amortPct}%</div>
+        <div style="font-size:10px;color:var(--t3)">амортиз.</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--t3)">Нач. стоимость</span><span style="font-weight:600">${fmtN(totalOriginal)} сум</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--amber)">Накоплено</span><span style="font-weight:600;color:var(--amber)">${fmtN(totalAccum)} сум</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--green)">Остаток</span><span style="font-weight:600;color:var(--green)">${fmtN(totalResidual)} сум</span></div>
+    </div>
+  </div>`;
+
+  // Вставить в дашборд
+  let chartDiv = document.getElementById('dash-charts');
+  if (!chartDiv) {
+    chartDiv = document.createElement('div');
+    chartDiv.id = 'dash-charts';
+    chartDiv.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0 18px;';
+    document.getElementById('page-dashboard').appendChild(chartDiv);
+  }
+  chartDiv.innerHTML = '<div>' + costHtml + yearHtml + '</div><div>' + vidHtml + amortHtml + '</div>';
+}
+
+// ===================== УВЕДОМЛЕНИЯ =====================
+function loadAlertsBadge() {
+  google.script.run
+    .withSuccessHandler(res => {
+      if (!res || !res.ok) return;
+      const total = res.counts.danger + res.counts.warning;
+      const badge = document.getElementById('alert-badge');
+      if (badge && total > 0) { badge.textContent = total; badge.style.display = ''; }
+    })
+    .withFailureHandler(() => {})
+    .getAlerts(TOKEN);
+}
+
+function loadAlerts() {
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res || !res.ok) { toast(res && res.error,'err'); return; }
+      document.getElementById('al-danger').textContent  = res.counts.danger;
+      document.getElementById('al-warning').textContent = res.counts.warning;
+      document.getElementById('al-info').textContent    = res.counts.info;
+      const tb = document.getElementById('alerts-tbody'); tb.innerHTML = '';
+      if (!res.alerts.length) {
+        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--t3)">✅ Нет активных уведомлений</td></tr>';
+        return;
+      }
+      const icons = { danger:'🔴', warning:'🟡', info:'🔵' };
+      const labels = { expired:'Истёк срок', fully_amort:'Амортизирован', expiring_soon:'Истекает скоро' };
+      const cls    = { danger:'b-off', warning:'b-res', info:'b-os' };
+      res.alerts.forEach(a => {
+        tb.innerHTML += `<tr>
+          <td><span class="badge ${cls[a.level]}">${icons[a.level]} ${labels[a.type]||a.type}</span></td>
+          <td style="font-size:12px;font-weight:600;color:var(--navy);cursor:pointer" onclick="openDP('${a.inv}')">${a.inv}</td>
+          <td style="font-size:12px">${a.name}</td>
+          <td style="font-size:12px">${a.dept}</td>
+          <td style="font-size:12px">${a.msg}</td>
+          <td style="font-size:12px;color:var(--t3)">${a.expiry||'—'}</td>
+        </tr>`;
+      });
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getAlerts(TOKEN);
+}
+
+// ===================== ОТЧЁТЫ =====================
+function loadReports() { /* страница статична, ничего грузить не нужно */ }
+
+function genDeptReport() {
+  const sel = document.getElementById('rep-dept');
+  const dept = sel ? sel.options[sel.selectedIndex].value : '';
+  console.log('genDeptReport dept:', dept);
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      // Override dept in response with what was selected
+      if (dept) res.dept = dept;
+      const w = window.open('', '_blank');
+      w.document.write(buildDeptReportHTML(res));
+      w.document.close();
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getReportByDept(TOKEN, dept);
+}
+
+function buildDeptReportHTML(res) {
+  const date = new Date().toLocaleDateString('ru-RU');
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Отчёт ${res.dept}</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;padding:28px;color:#1a2332;font-size:12px}
+  h1{font-size:18px;color:#1a3a5c;margin-bottom:4px}.sub{color:#718096;font-size:12px;margin-bottom:20px}
+  .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+  .kpi-c{border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center}
+  .kpi-c .v{font-size:22px;font-weight:800;color:#1a3a5c}.kpi-c .l{font-size:10px;color:#718096;text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px}
+  thead th{background:#1a3a5c;color:#fff;padding:7px 9px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase}
+  td{padding:7px 9px;border-bottom:1px solid #e2e8f0}
+  tr:nth-child(even){background:#f7f9fc}
+  .b-os{background:#ebf4ff;color:#2b6cb0;padding:2px 6px;border-radius:8px;font-size:10px;font-weight:700}
+  .b-inv{background:#f0fff4;color:#276749;padding:2px 6px;border-radius:8px;font-size:10px;font-weight:700}
+  @media print{body{padding:15px}button{display:none}}</style></head><body>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+    <div><h1>Сводный отчёт: ${res.dept}</h1><div class="sub">GOLD LAVASH · Дата: ${date}</div></div>
+    <button onclick="window.print()" style="padding:8px 16px;background:#1a3a5c;color:#fff;border:none;border-radius:8px;cursor:pointer">🖨️ Печать</button>
+  </div>
+  <div class="kpi">
+    <div class="kpi-c"><div class="v">${res.data.length}</div><div class="l">Всего объектов</div></div>
+    <div class="kpi-c"><div class="v" style="color:#d4a017">${fmtNr(res.totalCost)}</div><div class="l">Балансовая стоимость (сум)</div></div>
+    <div class="kpi-c"><div class="v" style="color:#38a169">${fmtNr(res.totalResidual)}</div><div class="l">Остаточная стоимость (сум)</div></div>
+  </div>
+  <table><thead><tr><th>№</th><th>Инв. номер</th><th>Наименование</th><th>Тип</th><th>Вид</th><th>Подразделение</th><th>Ответственный</th><th>Дата пост.</th><th>Стоимость</th><th>Накоплено</th><th>Остаток</th><th>Состояние</th></tr></thead><tbody>`;
+  res.data.forEach((o,i) => {
+    html += `<tr><td>${i+1}</td><td>${o['Инвентарный номер']}</td><td>${o['Наименование']}</td>
+      <td><span class="${o['ОС/Инвентар']==='ОС'?'b-os':'b-inv'}">${o['ОС/Инвентар']}</span></td>
+      <td>${o['Вид']||'—'}</td><td>${o['Подразделения']}</td><td>${o['Ответственный лицо']||'—'}</td>
+      <td>${o['Дата поступление']||'—'}</td>
+      <td style="text-align:right">${fmtNr(o['Рыночный стоимость'])}</td>
+      <td style="text-align:right;color:#d69e2e">${fmtNr(o.накоплено)}</td>
+      <td style="text-align:right;color:#38a169">${fmtNr(o.остаток)}</td>
+      <td>${o['Состояния']}</td></tr>`;
+  });
+  html += `</tbody></table>
+  <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px">
+    <div style="border-top:1px solid #000;padding-top:6px;font-size:11px">Составил: _____________ /______/</div>
+    <div style="border-top:1px solid #000;padding-top:6px;font-size:11px">Проверил: _____________ /______/</div>
+    <div style="border-top:1px solid #000;padding-top:6px;font-size:11px">Утвердил: _____________ /______/</div>
+  </div>
+  <div style="margin-top:12px;font-size:10px;color:#a0aec0">Сформировано: ${new Date().toLocaleString('ru-RU')} · GOLD LAVASH</div>
+  </body></html>`;
+  return html;
+}
+
+function fmtNr(n) { return (parseFloat(n)||0).toLocaleString('ru-RU',{maximumFractionDigits:0}); }
+
+function genRegistryReport() {
+  const _selR = document.getElementById('rep-reg-dept');
+  const dept = _selR ? _selR.options[_selR.selectedIndex].value : '';
+  const type = document.getElementById('rep-reg-type').value;
+  const filtered = allData.filter(o =>
+    (!dept || o['Подразделения']===dept) &&
+    (!type || o['ОС/Инвентар']===type)
+  );
+  const w = window.open('', '_blank');
+  const date = new Date().toLocaleDateString('ru-RU');
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Реестр ОС</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;padding:20px;font-size:11px}
+  h1{font-size:15px;color:#1a3a5c;margin-bottom:4px}.sub{color:#718096;font-size:11px;margin-bottom:14px}
+  table{width:100%;border-collapse:collapse}
+  thead th{background:#1a3a5c;color:#fff;padding:6px 8px;text-align:left;font-size:10px;font-weight:600}
+  td{padding:6px 8px;border-bottom:1px solid #e2e8f0;font-size:11px}
+  tr:nth-child(even){background:#f7f9fc}
+  @media print{body{padding:10px}button{display:none}}</style></head><body>
+  <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+    <div><h1>Реестр ОС${dept?' — '+dept:''}</h1><div class="sub">GOLD LAVASH · ${date} · Объектов: ${filtered.length}</div></div>
+    <button onclick="window.print()" style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:7px;cursor:pointer">🖨️ Печать</button>
+  </div>
+  <table><thead><tr><th>№</th><th>Инв. номер</th><th>Наименование</th><th>Тип</th><th>Вид</th><th>Подразделение</th><th>Ответственный</th><th>Адрес</th><th>Дата пост.</th><th>Стоимость</th><th>Состояние</th></tr></thead><tbody>`;
+  filtered.forEach((o,i) => {
+    html += `<tr><td>${i+1}</td><td><strong>${o['Инвентарный номер']}</strong></td><td>${o['Наименование']}</td>
+      <td>${o['ОС/Инвентар']}</td><td>${o['Вид']||'—'}</td><td>${o['Подразделения']}</td>
+      <td>${o['Ответственный лицо']||'—'}</td><td>${o['Адрес']||'—'}</td>
+      <td>${o['Дата поступление']||'—'}</td>
+      <td style="text-align:right">${fmtNr(o['Рыночный стоимость'])}</td>
+      <td>${o['Состояния']}</td></tr>`;
+  });
+  html += '</tbody></table></body></html>';
+  w.document.write(html); w.document.close();
+}
+
+function openLabels() {
+  var execUrl = 'https://script.google.com/macros/s/AKfycbxQZNF8WNn6s3iuhqFfA38njltkSexqwDxMqd6ujTLjg2zro0WWhWArUk4QXlQQTrbi/exec';
+  window.open(execUrl + '?page=label', '_blank');
+}
+
+function genBatchCards() {
+  if (!allData || !allData.length) {
+    toast('Данные загружаются — подождите и повторите','err');
+    loadAllDataBackground(); return;
+  }
+  const _selC = document.getElementById('rep-card-dept');
+  const dept = _selC ? _selC.options[_selC.selectedIndex].value : '';
+  const filtered = allData.filter(o => !dept || o['Подразделения']===dept);
+  if (!filtered.length) { toast('Нет объектов для выбранного подразделения','err'); return; }
+  const w = window.open('', '_blank');
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Карточки ОС</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#fff}
+  .card{border:2px solid #1a3a5c;border-radius:6px;overflow:hidden;margin:10px;page-break-inside:avoid;width:380px;display:inline-block;vertical-align:top}
+  .card-head{background:#1a3a5c;color:#fff;padding:7px 12px;display:flex;justify-content:space-between;align-items:center}
+  .card-head .brand{font-size:10px;font-weight:700}.card-head .invnum{font-size:12px;font-weight:800;color:#d4a017}
+  .card-body{display:grid;grid-template-columns:100px 1fr}
+  .card-qr{padding:10px;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .card-qr img{width:80px;height:80px;border-radius:4px}.card-qr-lbl{font-size:8px;color:#718096;text-align:center}
+  .card-info{padding:10px}.card-name{font-size:11px;font-weight:700;color:#1a3a5c;margin-bottom:7px;line-height:1.3}
+  .fi{margin-bottom:4px}.fi .fl{font-size:8px;color:#718096;text-transform:uppercase;letter-spacing:.3px}
+  .fi .fv{font-size:10px;font-weight:600;color:#1a2332}
+  .card-foot{background:#f7f9fc;border-top:1px solid #e2e8f0;padding:5px 12px;display:flex;justify-content:space-between;font-size:10px}
+  @media print{body{margin:0}button{display:none}@page{size:A4;margin:5mm}}
+  </style></head><body>
+  <div style="padding:10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;margin-bottom:5px">
+    <strong style="color:#1a3a5c">Карточки ОС${dept?' — '+dept:''} · ${filtered.length} шт.</strong>
+    <button onclick="window.print()" style="padding:7px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:7px;cursor:pointer">🖨️ Печать</button>
+  </div>`;
+  filtered.forEach(o => {
+    const qr = o['QR-код']||'';
+    html += `<div class="card">
+      <div class="card-head"><span class="brand">🏭 GOLD LAVASH</span><span class="invnum">${o['Инвентарный номер']}</span></div>
+      <div class="card-body">
+        <div class="card-qr">${qr?`<img src="${qr}" alt="QR">`:'<div style="width:80px;height:80px;background:#f0f4f8;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:18px">📷</div>'}<div class="card-qr-lbl">Сканировать</div></div>
+        <div class="card-info">
+          <div class="card-name">${o['Наименование']}</div>
+          <div class="fi"><div class="fl">Ответственный</div><div class="fv">${o['Ответственный лицо']||'—'}</div></div>
+          <div class="fi"><div class="fl">Стоимость</div><div class="fv">${fmtNr(o['Рыночный стоимость'])} сум</div></div>
+          <div class="fi"><div class="fl">Дата поступления</div><div class="fv">${o['Дата поступление']||'—'}</div></div>
+        </div>
+      </div>
+      <div class="card-foot"><span>${o['Подразделения']}</span><span style="color:#38a169">${o['Состояния']}</span></div>
+    </div>`;
+  });
+  html += '</body></html>';
+  w.document.write(html); w.document.close();
+}
+
+function genAmortReport() {
+  const from = document.getElementById('rep-amort-from').value;
+  const to   = document.getElementById('rep-amort-to').value;
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      const w = window.open('', '_blank');
+      const date = new Date().toLocaleDateString('ru-RU');
+      let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Амортизация</title>
+      <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;padding:22px;font-size:12px}
+      h1{font-size:16px;color:#1a3a5c;margin-bottom:4px}.sub{color:#718096;font-size:11px;margin-bottom:16px}
+      table{width:100%;border-collapse:collapse}
+      thead th{background:#1a3a5c;color:#fff;padding:7px 9px;text-align:left;font-size:10px;font-weight:600}
+      td{padding:7px 9px;border-bottom:1px solid #e2e8f0}tr:nth-child(even){background:#f7f9fc}
+      .total{font-weight:700;background:#f0f4f8!important}
+      @media print{button{display:none}}</style></head><body>
+      <div style="display:flex;justify-content:space-between;margin-bottom:14px">
+        <div><h1>Отчёт по амортизации${from||to?' ('+( from||'...')+' — '+(to||'...')+')':''}</h1>
+        <div class="sub">GOLD LAVASH · ${date} · Записей: ${res.data.length}</div></div>
+        <button onclick="window.print()" style="padding:7px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:7px;cursor:pointer">🖨️ Печать</button>
+      </div>
+      <table><thead><tr><th>Инв. номер</th><th>Наименование</th><th>Год</th><th>Мес.</th><th>Нач. стоимость</th><th>За месяц</th><th>Накоплено</th><th>Остаток</th></tr></thead><tbody>`;
+      res.data.forEach(r => {
+        html += `<tr><td>${r['Инв. номер']}</td><td>${r['Наименование']}</td>
+          <td>${r['Год']}</td><td>${r['Месяц']}</td>
+          <td style="text-align:right">${fmtNr(r['Стоимость нач.'])}</td>
+          <td style="text-align:right;color:#d69e2e;font-weight:600">${fmtNr(r['Амортизация за месяц'])}</td>
+          <td style="text-align:right">${fmtNr(r['Накопл. амортизация'])}</td>
+          <td style="text-align:right;color:#38a169;font-weight:600">${fmtNr(r['Остаточная стоимость'])}</td></tr>`;
+      });
+      html += `<tr class="total"><td colspan="5">ИТОГО за период</td>
+        <td style="text-align:right;color:#d69e2e">${fmtNr(res.totalMonth)}</td><td></td><td></td></tr>`;
+      html += '</tbody></table></body></html>';
+      w.document.write(html); w.document.close();
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getAmortReport(TOKEN, from, to);
+}
+
+// ===================== ПОДРАЗДЕЛЕНИЯ =====================
+function loadDepts() {
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      const el = document.getElementById('depts-content');
+      el.innerHTML = '';
+      const { structure } = res;
+      Object.entries(structure).forEach(([dept, subs]) => {
+        let html = `<div class="tbl-wrap" style="margin-bottom:14px">
+          <div class="tbl-head" style="background:var(--navy);color:#fff;justify-content:space-between">
+            <span style="font-weight:600;font-size:13px">🏭 ${dept}</span>
+            <span style="font-size:12px;color:rgba(255,255,255,.6)">${subs.length} подподразделений</span>
+          </div>
+          <div style="padding:4px 0">`;
+        subs.forEach(s => {
+          html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--b)">
+            <div><div style="font-weight:500;font-size:13px">${s.name}</div><div style="font-size:12px;color:var(--t3)">${s.desc}</div></div>
+            ${SESSION.role==='admin'?`<button class="btn btn-outline btn-sm" onclick="deactivateDept('${dept}','${s.name}')" style="color:var(--red);border-color:var(--red)">🗑️ Удалить</button>`:''}
+          </div>`;
+        });
+        html += '</div></div>';
+        el.innerHTML += html;
+      });
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getDepartmentStructure(TOKEN);
+}
+
+function openAddDeptModal() {
+  document.getElementById('modal-add-dept').classList.add('open');
+  ['ad-dept','ad-subdept','ad-desc'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function submitAddDept() {
+  const dept    = (document.getElementById('ad-dept').value||'').trim();
+  const subdept = (document.getElementById('ad-subdept').value||'').trim();
+  const desc    = (document.getElementById('ad-desc').value||'').trim();
+  if (!dept) { toast('Укажите подразделение','err'); return; }
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) { closeModal('modal-add-dept'); toast('✅ Добавлено','ok'); loadDepts(); }
+      else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .addDepartment(TOKEN, dept, subdept, desc);
+}
+
+function deactivateDept(dept, subdept) {
+  if (!confirm('Удалить "'+subdept+'" из "'+dept+'"?')) return;
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) { toast('✅ Удалено','ok'); loadDepts(); }
+      else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .deactivateDepartment(TOKEN, dept, subdept);
+}
+
+
+// ===================== ФОТО ЗАГРУЗКА =====================
+let _photoBase64 = null;
+let _photoFileName = null;
+
+function triggerPhotoInput() {
+  if (_photoBase64) return; // уже есть фото — не триггерим повторно
+  document.getElementById('photo-file-input').click();
+}
+
+function handlePhotoDrop(event) {
+  event.preventDefault();
+  document.getElementById('photo-upload-area').style.borderColor = 'var(--b2)';
+  const file = event.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) processPhotoFile(file);
+}
+
+function handlePhotoSelect(event) {
+  const file = event.target.files[0];
+  if (file) processPhotoFile(file);
+  // Сбросить input чтобы можно было выбрать тот же файл повторно
+  event.target.value = '';
+}
+
+function processPhotoFile(file) {
+  // Показать превью
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    _photoBase64 = e.target.result;
+    _photoFileName = file.name || ('photo_' + Date.now() + '.jpg');
+    document.getElementById('photo-preview').src = _photoBase64;
+    document.getElementById('photo-preview-wrap').style.display = 'block';
+    document.getElementById('photo-placeholder').style.display = 'none';
+    document.getElementById('photo-hint').textContent = '✅ Фото выбрано: ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB) — сохранится при нажатии «Сохранить»';
+    document.getElementById('photo-upload-area').style.borderColor = 'var(--green)';
+    document.getElementById('photo-upload-area').style.cursor = 'default';
+    // Сбросить скрытое поле (URL будет получен при сохранении)
+    document.getElementById('f-photo').value = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearPhoto() {
+  _photoBase64 = null;
+  _photoFileName = null;
+  document.getElementById('f-photo').value = '';
+  document.getElementById('photo-preview').src = '';
+  document.getElementById('photo-preview-wrap').style.display = 'none';
+  document.getElementById('photo-placeholder').style.display = 'block';
+  document.getElementById('photo-hint').textContent = 'JPG, PNG — фото сохранится в Google Drive в папку подразделения';
+  document.getElementById('photo-upload-area').style.borderColor = 'var(--b2)';
+  document.getElementById('photo-upload-area').style.cursor = 'pointer';
+}
+
+// Загрузить фото на Drive, вернуть URL
+async function uploadPhotoToDrive(dept) {
+  if (!_photoBase64) return '';
+  return new Promise((resolve) => {
+    document.getElementById('photo-uploading').style.display = 'block';
+    document.getElementById('photo-placeholder').style.display = 'none';
+    document.getElementById('photo-preview-wrap').style.display = 'none';
+    google.script.run
+      .withSuccessHandler(res => {
+        document.getElementById('photo-uploading').style.display = 'none';
+        if (res.ok) {
+          document.getElementById('f-photo').value = res.url;
+          document.getElementById('photo-hint').textContent = '✅ Фото загружено в Google Drive';
+          document.getElementById('photo-preview').src = _photoBase64; // показать превью снова
+          document.getElementById('photo-preview-wrap').style.display = 'block';
+          resolve(res.url);
+        } else {
+          toast('Ошибка загрузки фото: ' + res.error, 'err');
+          document.getElementById('photo-preview-wrap').style.display = 'block';
+          document.getElementById('photo-hint').textContent = '⚠️ Фото не загружено — сохранить без фото?';
+          resolve('');
+        }
+      })
+      .withFailureHandler(e => {
+        document.getElementById('photo-uploading').style.display = 'none';
+        document.getElementById('photo-preview-wrap').style.display = 'block';
+        toast('Ошибка: ' + e, 'err');
+        resolve('');
+      })
+      .uploadPhoto(TOKEN, _photoBase64, _photoFileName, dept);
+  });
+}
+
+// Перехватить submitAdd — сначала загрузить фото, потом сохранить ОС
+const _origSubmitAdd = submitAdd;
+async function submitAdd(src) {
+  const d = getAddFormData();
+  if (!d.name) { toast('Укажите наименование','err'); return; }
+  if (!d.vid)  { toast('Выберите вид','err'); return; }
+  if (!d.department) { toast('Укажите подразделение','err'); return; }
+  if (!d.responsible) { toast('Укажите ответственное лицо','err'); return; }
+  if (!d.cost || d.cost<=0) { toast('Укажите стоимость','err'); return; }
+
+  showLoader();
+  // Если есть фото — сначала загрузить
+  if (_photoBase64 && !document.getElementById('f-photo').value) {
+    const photoUrl = await uploadPhotoToDrive(d.department);
+    d.photoUrl = photoUrl;
+  } else {
+    d.photoUrl = document.getElementById('f-photo')?.value || '';
+  }
+
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) {
+        if (src==='modal') closeModal('modal-add');
+        // Сбросить фото после сохранения
+        clearPhoto();
+        toast('✅ Принято! Инв. номер: '+res.invNum, 'ok');
+        showAddResult(res);
+        if (allData.length) loadList();
+      } else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .addOS(d, TOKEN);
+}
+
+
+// ===================== МЕСТА ХРАНЕНИЯ =====================
+function loadStorage() {
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      const el = document.getElementById('storage-content');
+      el.innerHTML = '';
+      // Группировать по подразделению
+      const byDept = {};
+      res.data.forEach(r => {
+        const d = r['Подразделение'] || '—';
+        if (!byDept[d]) byDept[d] = [];
+        byDept[d].push(r);
+      });
+      Object.entries(byDept).forEach(([dept, locs]) => {
+        let html = `<div class="tbl-wrap" style="margin-bottom:14px">
+          <div class="tbl-head" style="background:var(--navy);color:#fff;justify-content:space-between">
+            <span style="font-weight:600;font-size:13px">📦 ${dept}</span>
+            <span style="font-size:12px;color:rgba(255,255,255,.6)">${locs.length} мест</span>
+          </div><div style="padding:4px 0">`;
+        locs.forEach(l => {
+          html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--b)">
+            <div><div style="font-weight:500;font-size:13px">${l['Место хранения']}</div>
+            <div style="font-size:12px;color:var(--t3)">${l['Описание']||''}</div></div>
+            ${SESSION.role==='admin'?`<button class="btn btn-outline btn-sm" onclick="deleteStorage('${dept}','${l['Место хранения']}')" style="color:var(--red);border-color:var(--red)">🗑️</button>`:''}
+          </div>`;
+        });
+        html += '</div></div>';
+        el.innerHTML += html;
+      });
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getAllStorageLocations(TOKEN);
+}
+
+function openAddStorageModal() {
+  document.getElementById('modal-add-storage').classList.add('open');
+  ['as-dept','as-name','as-desc'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function submitAddStorage() {
+  const dept = document.getElementById('as-dept').value;
+  const name = (document.getElementById('as-name').value||'').trim();
+  const desc = (document.getElementById('as-desc').value||'').trim();
+  if (!dept) { toast('Выберите подразделение','err'); return; }
+  if (!name) { toast('Введите название','err'); return; }
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) { closeModal('modal-add-storage'); toast('✅ Добавлено','ok'); loadStorage(); }
+      else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .addStorageLocation(TOKEN, dept, name, desc);
+}
+
+function deleteStorage(dept, name) {
+  if (!confirm('Удалить место хранения "'+name+'"?')) return;
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) { toast('✅ Удалено','ok'); loadStorage(); }
+      else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .deleteStorageLocation(TOKEN, dept, name);
+}
+
+// Загрузить места хранения для выпадающего в акте перемещения
+function loadMvStorage() {
+  const dept = document.getElementById('mv-to').value;
+  const sel = document.getElementById('mv-storage');
+  sel.innerHTML = '<option value="">— загрузка... —</option>';
+  if (!dept) { sel.innerHTML = '<option value="">— выберите подразделение —</option>'; return; }
+  google.script.run
+    .withSuccessHandler(res => {
+      sel.innerHTML = '<option value="">— выберите место —</option>';
+      if (res.ok) res.data.forEach(l => {
+        sel.innerHTML += `<option value="${l['Место хранения']}">${l['Место хранения']}</option>`;
+      });
+    })
+    .withFailureHandler(() => { sel.innerHTML = '<option value="">Ошибка загрузки</option>'; })
+    .getStorageLocations(TOKEN, dept);
+}
+
+// ===================== РЕДАКТИРОВАНИЕ ОС =====================
+function openEditModal() {
+  if (!currentInv) return;
+  const os = allData.find(o => o['Инвентарный номер'] === currentInv);
+  if (!os) { toast('Нет данных об объекте','err'); return; }
+  document.getElementById('edit-inv').textContent = os['Инвентарный номер'];
+  document.getElementById('edit-name').textContent = (os['Наименование']||'').substring(0,50);
+  document.getElementById('edit-resp-manual').value = os['Ответственный лицо']||'';
+  document.getElementById('edit-storage-manual').value = os['Адрес']||'';
+  
+  const dept = os['Подразделения']||'';
+  // Загрузить ответственных
+  const respSel = document.getElementById('edit-resp');
+  respSel.innerHTML = '<option value="">— выберите —</option>';
+  google.script.run
+    .withSuccessHandler(res => {
+      if (res.ok) res.data.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p; opt.textContent = p;
+        if (p === os['Ответственный лицо']) opt.selected = true;
+        respSel.appendChild(opt);
+      });
+    })
+    .withFailureHandler(() => {})
+    .getResponsiblePersons(TOKEN, dept);
+
+  // Загрузить места хранения
+  const storSel = document.getElementById('edit-storage');
+  storSel.innerHTML = '<option value="">— выберите —</option>';
+  google.script.run
+    .withSuccessHandler(res => {
+      if (res.ok) res.data.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l['Место хранения']; opt.textContent = l['Место хранения'];
+        if (l['Место хранения'] === os['Адрес']) opt.selected = true;
+        storSel.appendChild(opt);
+      });
+    })
+    .withFailureHandler(() => {})
+    .getStorageLocations(TOKEN, dept);
+
+  document.getElementById('modal-edit').classList.add('open');
+}
+
+function submitEdit() {
+  const inv = document.getElementById('edit-inv').textContent;
+  // Приоритет: выпадающий список, потом ручной ввод
+  const respSel = document.getElementById('edit-resp').value;
+  const respManual = (document.getElementById('edit-resp-manual').value||'').trim();
+  const storSel = document.getElementById('edit-storage').value;
+  const storManual = (document.getElementById('edit-storage-manual').value||'').trim();
+  const responsible = respSel || respManual;
+  const storage = storSel || storManual;
+  if (!responsible && !storage) { toast('Укажите хотя бы одно поле','err'); return; }
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (res.ok) {
+        closeModal('modal-edit');
+        toast('✅ Изменения сохранены','ok');
+        // Обновить данные
+        loadList();
+        openDP(inv);
+      } else toast('Ошибка: '+res.error,'err');
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .updateOSResponsible(TOKEN, inv, responsible, storage);
+}
+
+// ===================== ОТЧЁТЫ ПО МЕСТАМ И ОТВЕТСТВЕННЫМ =====================
+function genStorageReport() {
+  const _sel = document.getElementById('rep-stor-dept');
+  const dept = _sel ? _sel.options[_sel.selectedIndex].value : '';
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      const w = window.open('','_blank');
+      w.document.write(buildStorageReportHTML(res));
+      w.document.close();
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getReportByStorage(TOKEN, dept);
+}
+
+function buildStorageReportHTML(res) {
+  const date = new Date().toLocaleDateString('ru-RU');
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>По местам хранения</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;padding:24px;font-size:12px}
+  h1{font-size:17px;color:#1a3a5c;margin-bottom:4px}.sub{color:#718096;font-size:11px;margin-bottom:16px}
+  h2{font-size:13px;color:#1a3a5c;margin:18px 0 8px;padding:8px 12px;background:#f0f4f8;border-left:4px solid #1a3a5c;border-radius:4px}
+  table{width:100%;border-collapse:collapse;margin-bottom:4px}
+  thead th{background:#1a3a5c;color:#fff;padding:6px 9px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase}
+  td{padding:6px 9px;border-bottom:1px solid #e2e8f0;font-size:11px}tr:nth-child(even){background:#f7f9fc}
+  .total{font-weight:700;background:#e8f4f0!important;color:#276749}
+  .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+  .kc{border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center}
+  .kc .v{font-size:22px;font-weight:800;color:#1a3a5c}.kc .l{font-size:10px;color:#718096;text-transform:uppercase}
+  @media print{button{display:none}}</style></head><body>
+  <div style="display:flex;justify-content:space-between;margin-bottom:14px">
+    <div><h1>Отчёт по местам хранения: ${res.dept}</h1><div class="sub">GOLD LAVASH · ${date}</div></div>
+    <button onclick="window.print()" style="padding:7px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:7px;cursor:pointer">🖨️ Печать</button>
+  </div>
+  <div class="kpi">
+    <div class="kc"><div class="v">${res.data.length}</div><div class="l">Всего объектов</div></div>
+    <div class="kc"><div class="v">${Object.keys(res.byStorage).length}</div><div class="l">Мест хранения</div></div>
+    <div class="kc"><div class="v" style="color:#d4a017">${fmtNr(res.totalCost)}</div><div class="l">Общая стоимость (сум)</div></div>
+  </div>`;
+  Object.entries(res.byStorage).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([loc, items]) => {
+    const locCost = items.reduce((s,o)=>s+(parseFloat(o['Рыночный стоимость'])||0),0);
+    html += `<h2>📦 ${loc} &nbsp;<span style="font-size:11px;color:#718096">(${items.length} объектов · ${fmtNr(locCost)} сум)</span></h2>
+    <table><thead><tr><th>Инв. номер</th><th>Наименование</th><th>Тип</th><th>Подразделение</th><th>Ответственный</th><th>Стоимость</th><th>Состояние</th></tr></thead><tbody>`;
+    items.forEach(o => {
+      html += `<tr><td><strong>${o['Инвентарный номер']}</strong></td><td>${o['Наименование']}</td>
+        <td>${o['ОС/Инвентар']}</td><td>${o['Подразделения']}</td>
+        <td>${o['Ответственный лицо']||'—'}</td>
+        <td style="text-align:right">${fmtNr(o['Рыночный стоимость'])}</td>
+        <td>${o['Состояния']}</td></tr>`;
+    });
+    html += `<tr class="total"><td colspan="5">Итого по "${loc}"</td><td style="text-align:right">${fmtNr(locCost)}</td><td></td></tr>`;
+    html += '</tbody></table>';
+  });
+  html += `<div style="margin-top:20px;font-size:10px;color:#a0aec0">GOLD LAVASH · ${new Date().toLocaleString('ru-RU')}</div></body></html>`;
+  return html;
+}
+
+function genResponsibleReport() {
+  const _sel2 = document.getElementById('rep-resp-dept');
+  const dept = _sel2 ? _sel2.options[_sel2.selectedIndex].value : '';
+  showLoader();
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res.ok) { toast(res.error,'err'); return; }
+      const w = window.open('','_blank');
+      w.document.write(buildRespReportHTML(res));
+      w.document.close();
+    })
+    .withFailureHandler(e => { hideLoader(); toast(e,'err'); })
+    .getReportByResponsible(TOKEN, dept);
+}
+
+function buildRespReportHTML(res) {
+  const date = new Date().toLocaleDateString('ru-RU');
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>По ответственным</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;padding:24px;font-size:12px}
+  h1{font-size:17px;color:#1a3a5c;margin-bottom:4px}.sub{color:#718096;font-size:11px;margin-bottom:16px}
+  h2{font-size:13px;color:#1a3a5c;margin:18px 0 8px;padding:8px 12px;background:#ebf4ff;border-left:4px solid #2b6cb0;border-radius:4px}
+  table{width:100%;border-collapse:collapse;margin-bottom:4px}
+  thead th{background:#2b6cb0;color:#fff;padding:6px 9px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase}
+  td{padding:6px 9px;border-bottom:1px solid #e2e8f0;font-size:11px}tr:nth-child(even){background:#f7f9fc}
+  .total{font-weight:700;background:#ebf4ff!important}
+  .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+  .kc{border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center}
+  .kc .v{font-size:22px;font-weight:800;color:#1a3a5c}.kc .l{font-size:10px;color:#718096;text-transform:uppercase}
+  @media print{button{display:none}}</style></head><body>
+  <div style="display:flex;justify-content:space-between;margin-bottom:14px">
+    <div><h1>Отчёт по ответственным лицам: ${res.dept}</h1><div class="sub">GOLD LAVASH · ${date}</div></div>
+    <button onclick="window.print()" style="padding:7px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:7px;cursor:pointer">🖨️ Печать</button>
+  </div>
+  <div class="kpi">
+    <div class="kc"><div class="v">${res.data.length}</div><div class="l">Всего объектов</div></div>
+    <div class="kc"><div class="v">${Object.keys(res.byResp).length}</div><div class="l">Ответственных лиц</div></div>
+    <div class="kc"><div class="v" style="color:#d4a017">${fmtNr(res.totalCost)}</div><div class="l">Общая стоимость (сум)</div></div>
+  </div>`;
+  Object.entries(res.byResp).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([resp, items]) => {
+    const respCost = items.reduce((s,o)=>s+(parseFloat(o['Рыночный стоимость'])||0),0);
+    html += `<h2>👤 ${resp} &nbsp;<span style="font-size:11px;color:#718096">(${items.length} объектов · ${fmtNr(respCost)} сум)</span></h2>
+    <table><thead><tr><th>Инв. номер</th><th>Наименование</th><th>Тип</th><th>Подразделение</th><th>Место хранения</th><th>Стоимость</th><th>Состояние</th></tr></thead><tbody>`;
+    items.forEach(o => {
+      html += `<tr><td><strong>${o['Инвентарный номер']}</strong></td><td>${o['Наименование']}</td>
+        <td>${o['ОС/Инвентар']}</td><td>${o['Подразделения']}</td>
+        <td>${o['Адрес']||'—'}</td>
+        <td style="text-align:right">${fmtNr(o['Рыночный стоимость'])}</td>
+        <td>${o['Состояния']}</td></tr>`;
+    });
+    html += `<tr class="total"><td colspan="5">Итого за ${resp}</td><td style="text-align:right">${fmtNr(respCost)}</td><td></td></tr>`;
+    html += '</tbody></table>';
+  });
+  html += `<div style="margin-top:20px;font-size:10px;color:#a0aec0">GOLD LAVASH · ${new Date().toLocaleString('ru-RU')}</div></body></html>`;
+  return html;
+}
+
+// Обновить confirmMove чтобы включить место хранения
+const _origConfirmMove = confirmMove;
+function confirmMove() {
+  const storageVal = document.getElementById('mv-storage') ? document.getElementById('mv-storage').value : '';
+  if (storageVal) {
+    // Добавить место хранения в основание
+    const reasonEl = document.getElementById('mv-reason');
+    if (reasonEl && !reasonEl.value.includes(storageVal)) {
+      const prev = reasonEl.value;
+      reasonEl.value = prev ? prev + ' → ' + storageVal : storageVal;
+    }
+    // Обновить место хранения как адрес
+    const inv = document.getElementById('mv-inv').value.trim();
+    if (inv) {
+      google.script.run
+        .withSuccessHandler(() => {})
+        .withFailureHandler(() => {})
+        .updateOSField(inv, 'Адрес', storageVal, TOKEN);
+    }
+  }
+  _origConfirmMove();
+}
+
+// ===================== ИНИТ =====================
+window.addEventListener('DOMContentLoaded', () => {
+  if (TOKEN) {
+    const saved = localStorage.getItem('gl_sess');
+    if (saved) {
+      try {
+        SESSION = JSON.parse(saved);
+        // Проверить токен на сервере перед входом
+        showLoader();
+        google.script.run
+          .withSuccessHandler(res => {
+            hideLoader();
+            if (res && res.ok) {
+              document.getElementById('login-screen').style.display = 'none';
+              initApp();
+            } else {
+              // Токен протух — показать форму входа
+              TOKEN = ''; SESSION = null;
+              localStorage.removeItem('gl_token'); localStorage.removeItem('gl_sess');
+              document.getElementById('login-input').focus();
+            }
+          })
+          .withFailureHandler(() => {
+            hideLoader();
+            TOKEN = ''; SESSION = null;
+            localStorage.removeItem('gl_token'); localStorage.removeItem('gl_sess');
+            document.getElementById('login-input').focus();
+          })
+          .getSummary(TOKEN);
+        return;
+      } catch(e) {}
+    }
+  }
+  document.getElementById('login-input').focus();
+});
+</script>
+</body>
+</html>

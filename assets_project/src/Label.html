@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nakleiyki OS</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f4f8}
+.toolbar{background:#1a3a5c;color:#fff;padding:12px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100}
+.toolbar h1{font-size:14px;font-weight:700;margin-right:auto}
+.flt{padding:7px 10px;border-radius:7px;border:none;font-size:13px;background:rgba(255,255,255,.15);color:#fff;cursor:pointer}
+.flt option{color:#000;background:#fff}
+.btn-p{padding:8px 16px;border-radius:7px;border:none;font-size:13px;font-weight:700;cursor:pointer;background:#d4a017;color:#fff}
+.btn-b{padding:8px 14px;border-radius:7px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-size:13px;cursor:pointer}
+.counter{background:#fff;border-radius:8px;padding:8px 14px;margin:12px 16px 4px;font-size:13px;color:#1a3a5c;border:1px solid #e2e8f0;display:inline-block}
+.labels-wrap{padding:12px 16px;display:flex;flex-wrap:wrap;gap:3mm}
+.label{width:58mm;height:40mm;border:0.5pt solid #ccc;border-radius:2mm;overflow:hidden;background:#fff;page-break-inside:avoid;display:flex;flex-direction:column}
+.lh{background:#1a3a5c;color:#fff;padding:1.5mm 2mm;font-size:6pt;font-weight:700;text-align:center;letter-spacing:.3pt}
+.lb{flex:1;display:grid;grid-template-columns:20mm 1fr;overflow:hidden}
+.lq{padding:1.5mm;border-right:.3pt solid #e0e0e0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1mm}
+.lq img{width:17mm;height:17mm}
+.lql{font-size:5pt;color:#718096;text-align:center}
+.li{padding:1.5mm 2mm;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.linv{font-size:6.5pt;font-weight:800;color:#1a3a5c;line-height:1.1}
+.lname{font-size:5pt;color:#222;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.lf{display:flex;flex-direction:column;gap:.2mm}
+.lfl{font-size:4pt;color:#888;text-transform:uppercase}
+.lfv{font-size:4.5pt;font-weight:700;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lfoot{background:#f0f4f8;border-top:.3pt solid #e0e0e0;padding:.8mm 2mm;display:flex;justify-content:space-between;align-items:center}
+.ldept{font-size:4.5pt;color:#555;font-weight:700}
+.ldate{font-size:4pt;color:#999}
+.empty{padding:40px;text-align:center;color:#718096;font-size:14px}
+.loading{padding:40px;text-align:center;color:#718096;font-size:14px}
+@media print{
+  body{background:#fff;margin:0;padding:0}
+  .toolbar,.counter{display:none}
+  #single-wrap.printing-single{padding:0;gap:0}
+  #single-wrap.printing-single .label{border:.5pt solid #333}
+  .labels-wrap{padding:0;gap:1mm}
+  .label{border:.5pt solid #aaa}
+  @page{size:A4;margin:5mm}
+}
+@media print and (max-width:60mm){
+  @page{size:58mm 40mm;margin:0}
+  .label{width:58mm;height:40mm;border:none}
+}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <h1>Nakleiyki OS - GOLD LAVASH</h1>
+  <select class="flt" id="flt-dept" onchange="filterAndRender()">
+    <option value="">Vse podrazdeleniya</option>
+    <option>Производство</option><option>Завод СЭЗ</option>
+    <option>ОТП Самарканд</option><option>ОТП Тошкент</option><option>Офис Ад</option>
+  </select>
+  <select class="flt" id="flt-type" onchange="filterAndRender()">
+    <option value="">OS + INV</option>
+    <option value="ОС">OS</option>
+    <option value="ИНВ">INV</option>
+  </select>
+  <button class="btn-p" onclick="window.print()">🖨️ Pechat vse</button>
+  <button class="btn-b" onclick="history.back()">Back</button>
+</div>
+
+<!-- Поиск одного объекта -->
+<div style="background:#fff;border-bottom:1px solid #e2e8f0;padding:10px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <span style="font-size:13px;font-weight:700;color:#1a3a5c;white-space:nowrap">🔍 Одна наклейка:</span>
+  <input type="text" id="single-search" placeholder="Введите инв. номер (ИНВ-0001)..."
+    style="flex:1;min-width:200px;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none"
+    oninput="onSingleSearch(this.value)"
+    onfocus="this.style.borderColor='#1a3a5c'"
+    onblur="this.style.borderColor='#e2e8f0'">
+  <button onclick="printSingle()" style="padding:8px 16px;background:#38a169;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🖨️ Печать одной</button>
+  <button onclick="clearSingle()" style="padding:8px 12px;background:transparent;color:#718096;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;cursor:pointer">✕</button>
+  <div id="single-result" style="width:100%;font-size:12px;color:#38a169;font-weight:600;display:none"></div>
+</div>
+
+<div class="counter" id="counter">Loading...</div>
+
+<!-- Скрытый контейнер для одиночной печати -->
+<div id="single-wrap" style="display:none"></div>
+
+<div class="labels-wrap" id="wrap"><div class="loading">Loading data...</div></div>
+
+<script>
+var ALL_DATA = [];
+
+function init() {
+  google.script.run
+    .withSuccessHandler(function(items) {
+      ALL_DATA = items || [];
+      filterAndRender();
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById('wrap').innerHTML = '<div class="empty">Error: ' + e + '</div>';
+      document.getElementById('counter').textContent = 'Error';
+    })
+    .getAllOSPublic();
+}
+
+var selectedInv = null;
+
+function onSingleSearch(val) {
+  var resultEl = document.getElementById('single-result');
+  if (!val || val.length < 3) {
+    resultEl.style.display = 'none';
+    selectedInv = null;
+    return;
+  }
+  var found = ALL_DATA.find(function(o) {
+    var inv = o['Инвентарный номер'] || o.i || '';
+    return inv.toLowerCase().indexOf(val.toLowerCase()) !== -1;
+  });
+  if (found) {
+    selectedInv = found;
+    var inv = found['Инвентарный номер'] || found.i || '';
+    var name = found['Наименование'] || found.n || '';
+    var dept = found['Подразделения'] || found.d || '';
+    resultEl.textContent = '✅ Найден: ' + inv + ' — ' + name.substring(0, 50) + (name.length > 50 ? '...' : '') + ' (' + dept + ')';
+    resultEl.style.display = 'block';
+    resultEl.style.color = '#38a169';
+  } else {
+    selectedInv = null;
+    resultEl.textContent = '❌ Не найден: ' + val;
+    resultEl.style.display = 'block';
+    resultEl.style.color = '#e53e3e';
+  }
+}
+
+function printSingle() {
+  if (!selectedInv) {
+    alert('Введите инв. номер и выберите объект');
+    return;
+  }
+  // Открыть в новом окне с правильным размером для термопринтера
+  var w = window.open('', '_blank', 'width=400,height=350');
+  var o = selectedInv;
+  var inv  = o['Инвентарный номер'] || o.i || '';
+  var name = o['Наименование'] || o.n || '';
+  var resp = o['Ответственный лицо'] || o.r || '';
+  var addr = o['Адрес'] || o.a || '';
+  var dept = o['Подразделения'] || o.d || '';
+  var date = o['Дата поступление'] || o.dt || '';
+  var qr   = o['QR-код'] || o.q || '';
+  if (!qr && inv) qr = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(inv);
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<style>' +
+    '*{box-sizing:border-box;margin:0;padding:0}' +
+    'body{width:58mm;height:40mm;overflow:hidden;font-family:Arial,sans-serif}' +
+    '.label{width:58mm;height:40mm;border:.5pt solid #333;display:flex;flex-direction:column;overflow:hidden}' +
+    '.lh{background:#1a3a5c;color:#fff;padding:1mm 2mm;font-size:6pt;font-weight:700;text-align:center}' +
+    '.lb{flex:1;display:grid;grid-template-columns:20mm 1fr;overflow:hidden}' +
+    '.lq{padding:1mm;border-right:.3pt solid #e0e0e0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5mm}' +
+    '.lq img{width:17mm;height:17mm}' +
+    '.lql{font-size:4pt;color:#718096;text-align:center}' +
+    '.li{padding:1mm 1.5mm;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}' +
+    '.linv{font-size:7pt;font-weight:800;color:#1a3a5c}' +
+    '.lname{font-size:5pt;color:#222;line-height:1.2;max-height:12mm;overflow:hidden}' +
+    '.lf{display:flex;flex-direction:column;gap:.2mm}' +
+    '.lfl{font-size:4pt;color:#888;text-transform:uppercase}' +
+    '.lfv{font-size:5pt;font-weight:700;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+    '.lfoot{background:#f0f4f8;border-top:.3pt solid #e0e0e0;padding:.5mm 1.5mm;display:flex;justify-content:space-between}' +
+    '.ldept{font-size:4.5pt;color:#555;font-weight:700}' +
+    '.ldate{font-size:4pt;color:#999}' +
+    '@media print{' +
+    'body{margin:0;padding:0}' +
+    '@page{size:58mm 40mm;margin:0}' +
+    '.label{border:none}' +
+    '}' +
+    '</style></head><body>' +
+    '<div class="label">' +
+    '<div class="lh">GOLD LAVASH</div>' +
+    '<div class="lb">' +
+    '<div class="lq"><img src="' + qr + '" alt="QR"><div class="lql">Scan</div></div>' +
+    '<div class="li">' +
+    '<div class="linv">' + inv + '</div>' +
+    '<div class="lname">' + name + '</div>' +
+    '<div class="lf">' +
+    '<div><div class="lfl">Otv</div><div class="lfv">' + (resp||'-') + '</div></div>' +
+    '<div><div class="lfl">Addr</div><div class="lfv">' + (addr||'-') + '</div></div>' +
+    '</div>' +
+    '</div>' +
+    '</div>' +
+    '<div class="lfoot"><span class="ldept">' + dept + '</span><span class="ldate">' + date + '</span></div>' +
+    '</div>' +
+    '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};}<\/script>' +
+    '</body></html>';
+  
+  w.document.write(html);
+  w.document.close();
+}
+
+function clearSingle() {
+  document.getElementById('single-search').value = '';
+  document.getElementById('single-result').style.display = 'none';
+  selectedInv = null;
+}
+
+function renderLabel(o, container) {
+  var inv  = o['Инвентарный номер'] || o.i || '';
+  var name = o['Наименование'] || o.n || '';
+  var resp = o['Ответственный лицо'] || o.r || '';
+  var addr = o['Адрес'] || o.a || '';
+  var dept2= o['Подразделения'] || o.d || '';
+  var date = o['Дата поступление'] || o.dt || '';
+  var qr   = o['QR-код'] || o.q || '';
+  if (!qr && inv) {
+    qr = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(inv);
+  }
+  var lbl = document.createElement('div');
+  lbl.className = 'label';
+  var lh = document.createElement('div'); lh.className = 'lh'; lh.textContent = 'GOLD LAVASH'; lbl.appendChild(lh);
+  var lb = document.createElement('div'); lb.className = 'lb';
+  var lq = document.createElement('div'); lq.className = 'lq';
+  if (qr) { var qi = document.createElement('img'); qi.src = qr; qi.alt = 'QR'; lq.appendChild(qi); }
+  var lql = document.createElement('div'); lql.className = 'lql'; lql.textContent = 'Scan'; lq.appendChild(lql);
+  lb.appendChild(lq);
+  var li = document.createElement('div'); li.className = 'li';
+  var linv = document.createElement('div'); linv.className = 'linv'; linv.textContent = inv; li.appendChild(linv);
+  var lname = document.createElement('div'); lname.className = 'lname'; lname.textContent = name; li.appendChild(lname);
+  var lf = document.createElement('div'); lf.className = 'lf';
+  [['Otv', resp], ['Addr', addr]].forEach(function(f) {
+    var row = document.createElement('div');
+    var fl = document.createElement('div'); fl.className = 'lfl'; fl.textContent = f[0];
+    var fv = document.createElement('div'); fv.className = 'lfv'; fv.textContent = f[1] || '-';
+    row.appendChild(fl); row.appendChild(fv); lf.appendChild(row);
+  });
+  li.appendChild(lf); lb.appendChild(li); lbl.appendChild(lb);
+  var lfoot = document.createElement('div'); lfoot.className = 'lfoot';
+  var ldept = document.createElement('div'); ldept.className = 'ldept'; ldept.textContent = dept2;
+  var ldate = document.createElement('div'); ldate.className = 'ldate'; ldate.textContent = date;
+  lfoot.appendChild(ldept); lfoot.appendChild(ldate); lbl.appendChild(lfoot);
+  container.appendChild(lbl);
+}
+
+function filterAndRender() {
+  var dept = document.getElementById('flt-dept').value;
+  var type = document.getElementById('flt-type').value;
+  var data = ALL_DATA.filter(function(o) {
+    var od = o['Подразделения'] || o.d || '';
+    var ot = o['ОС/Инвентар'] || o.t || '';
+    if (dept && od !== dept) return false;
+    if (type && ot !== type) return false;
+    return true;
+  });
+  document.getElementById('counter').textContent = 'Nakleiyek: ' + data.length + ' sht.  Format: 58x40 mm';
+  var wrap = document.getElementById('wrap');
+  if (!data.length) {
+    wrap.innerHTML = '<div class="empty">Net obyektov</div>';
+    return;
+  }
+  var frag = document.createDocumentFragment();
+  data.forEach(function(o) { renderLabel(o, frag); });
+  wrap.innerHTML = '';
+  wrap.appendChild(frag);
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

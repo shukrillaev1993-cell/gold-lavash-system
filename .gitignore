@@ -1,0 +1,22 @@
+# Node / scratch
+node_modules/
+gen_full_client.js
+
+# Android
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/local.properties
+mobile/android/.idea/
+mobile/android/*.iml
+
+# Xcode
+mobile/ios/build/
+mobile/ios/*.xcodeproj/xcuserdata/
+mobile/ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+mobile/ios/DerivedData/
+mobile/ios/GoldLavash-unsigned.ipa
+
+# clasp / Apps Script auth (never commit tokens)
+.clasprc.json
+.clasp.json.bak
