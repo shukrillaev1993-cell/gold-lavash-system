@@ -209,10 +209,16 @@ function assetsUpdateFieldInternal(invNum, field, value) {
   var data = sh.getDataRange().getValues();
   var headers = data[0];
   var colIdx = headers.indexOf(field);
-  if (colIdx === -1) return;
+  var invCol = headers.indexOf('Инвентарный номер');
+  if (colIdx === -1 || invCol === -1) return false;
+  var searchInv = String(invNum).trim();
   for (var i = 1; i < data.length; i++) {
-    if (String(data[i][1]) === String(invNum)) { sh.getRange(i + 1, colIdx + 1).setValue(value); return; }
+    if (String(data[i][invCol] || '').trim() === searchInv) {
+      sh.getRange(i + 1, colIdx + 1).setValue(value);
+      return true;
+    }
   }
+  return false;
 }
 
 function assetsUpdateField(user, payload) {
@@ -1065,7 +1071,10 @@ function assetsUploadPhotoPublic(base64Data, fileName, dept, invNum) {
     // uc?export=view часто не отдаёт саму картинку в <img> (Google подменяет
     // предупреждением) — thumbnail-эндпоинт отдаёт байты картинки надёжно.
     var url = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1000';
-    if (invNum) assetsUpdateFieldPublic(invNum, 'Фото URL', url);
+    if (invNum) {
+      var saved = assetsUpdateFieldPublic(invNum, 'Фото URL', url);
+      if (!saved.ok) return {ok: false, error: 'Фото загружено в Drive, но не привязано: ' + saved.error};
+    }
     return {ok: true, fileId: fileId, url: url};
   } catch (e) {
     return {ok: false, error: e.message};
@@ -1076,7 +1085,8 @@ function assetsUpdateFieldPublic(invNum, field, value) {
   try {
     var allowed = ['Фото URL', 'QR-код', 'Ссылка на карточку'];
     if (allowed.indexOf(field) === -1) return {ok: false, error: 'Поле не разрешено'};
-    assetsUpdateFieldInternal(invNum, field, value);
+    var updated = assetsUpdateFieldInternal(invNum, field, value);
+    if (!updated) return {ok: false, error: 'Объект с инв. номером "' + invNum + '" не найден'};
     return {ok: true};
   } catch (e) { return {ok: false, error: e.message}; }
 }
