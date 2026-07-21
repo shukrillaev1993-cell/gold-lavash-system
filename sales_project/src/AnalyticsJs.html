@@ -1,0 +1,179 @@
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+  var DASH=null, READY=false, FILLED=false, TAB='overview', PIN='';
+  google.charts.load('current', {packages:['corechart','bar']});
+  google.charts.setOnLoadCallback(function(){ READY=true; draw(); });
+
+  function $(id){ return document.getElementById(id); }
+  function have(id){ return !!document.getElementById(id); }
+
+  // ---- Пароль-барьер ----
+  function gateEnter(){
+    var pin=$('gatePin').value;
+    $('gateErr').textContent='Проверка…';
+    google.script.run.withSuccessHandler(function(r){
+      if(r.ok){ PIN=pin; $('gate').style.display='none'; $('app').style.display='block'; loadData(); }
+      else { $('gateErr').textContent='Неверный пароль'; }
+    }).withFailureHandler(function(e){ $('gateErr').textContent=String(e.message||e); }).checkAnalyticsPin(pin);
+  }
+  function fmtSum(x){ x=Number(x)||0; var s=x<0?'-':''; x=Math.abs(x);
+    if(x>=1e9) return s+(x/1e9).toFixed(2)+' млрд'; if(x>=1e6) return s+(x/1e6).toFixed(1)+' млн';
+    if(x>=1e3) return s+(x/1e3).toFixed(0)+' тыс'; return s+Math.round(x); }
+  function fmtMln(x){ return ((Number(x)||0)/1e6).toFixed(0); }
+  function fmtInt(x){ return (Math.round(Number(x)||0)).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+
+  function loadData(){
+    $('loading').style.display='block'; hideAllPanes();
+    var f={ from:$('fFrom').value, to:$('fTo').value, client:$('fClient').value, group:$('fGroup').value, sku:$('fSku').value, channel:($('fChannel')?$('fChannel').value:''), pin:PIN };
+    google.script.run.withSuccessHandler(function(d){
+      DASH=d;
+      if(!FILLED){ fillSel('fClient',d.clientsList); fillSel('fGroup',d.groupsList); fillSel('fSku',d.skuList); fillSel('fChannel',d.channelsList); FILLED=true; }
+      $('periodInfo').textContent = d.kpi.months+' мес · '+d.kpi.clients+' клиентов · '+d.kpi.skus+' SKU · '+fmtInt(d.kpi.rows)+' строк';
+      $('loading').style.display='none';
+      renderStatic(d);
+      showTab(TAB);
+    }).withFailureHandler(function(e){ $('loading').innerHTML='<span class="text-danger">Ошибка: '+(e.message||e)+'</span>'; })
+    .getSalesAnalytics(f);
+  }
+  function fillSel(id,list){ var s=$(id); (list||[]).forEach(function(c){ var o=document.createElement('option'); o.value=c; o.textContent=c; s.appendChild(o); }); }
+  function hideAllPanes(){ ['overview','sku','clients','abc','dyn'].forEach(function(t){ if(have('pane-'+t)) $('pane-'+t).style.display='none'; }); }
+
+  // строим HTML-таблицы/карточки (не зависят от Google Charts)
+  function renderStatic(d){
+    // KPI
+    $('kpiRow').innerHTML =
+      kpi('Выручка (нетто)', fmtSum(d.kpi.net), fmtInt(d.kpi.net)+' сум', true)+
+      kpi('Транзакций', fmtInt(d.kpi.transactions), 'строк')+
+      kpi('Клиентов', d.kpi.clients, 'уникальных')+
+      kpi('SKU', d.kpi.skus, 'наименований')+
+      kpi('Средн. транзакция', fmtSum(d.kpi.avgTx), 'на строку')+
+      kpiTrend('Тренд', d.kpi.trendPct);
+    // highlights
+    var topS=d.topSku[0], topC=d.topClients[0], topR=(d.returnsTopQty&&d.returnsTopQty[0]);
+    $('hlRow').innerHTML =
+      '<div class="col-12 col-md-4"><div class="hl green"><div class="t">🏆 Топ товар</div><div class="m"><b>'+(topS?topS.name:'—')+'</b>'+(topS?(' — '+fmtSum(topS.val)+' выручки'):'')+'</div></div></div>'+
+      '<div class="col-12 col-md-4"><div class="hl blue"><div class="t">👑 Топ клиент</div><div class="m"><b>'+(topC?topC.name:'—')+'</b>'+(topC?(' — '+fmtSum(topC.val)):'')+'</div></div></div>'+
+      '<div class="col-12 col-md-4"><div class="hl amber"><div class="t">⚠️ Возвраты</div><div class="m"><b>'+(topR?topR.name:'—')+'</b>'+(topR?(' — лидер возвратов ('+fmtInt(topR.val)+' шт). Проверьте логистику.'):' — нет')+'</div></div></div>';
+    // returns list (overview)
+    $('ovReturns').innerHTML = (d.returnsTopQty||[]).map(function(r){ return '<div class="listrow"><span>'+r.name+'</span><b>'+fmtInt(r.val)+'</b></div>'; }).join('') || '<div class="muted p-2">Возвратов нет</div>';
+    // SKU tab
+    $('skuCount').textContent = '· '+d.abc.length+' наименований';
+    $('skuAbcCards').innerHTML = abcCards(d.abcSummary,'SKU');
+    $('tblSku').innerHTML = abcTable(d.abc.slice(0,20),'Наименование');
+    // Clients tab
+    $('cliCount').textContent = '· '+d.clientAbc.length+' клиентов';
+    $('cliAbcCards').innerHTML = abcCards(d.clientAbcSummary,'клиентов');
+    $('tblClients').innerHTML = abcTable(d.clientAbc.slice(0,20),'Клиент');
+    // ABC tab lists
+    $('abcSkuA').innerHTML = (d.abc.filter(function(x){return x.cls==='A';}).slice(0,12)).map(function(x,i){ return '<div class="listrow"><span>'+(i+1)+'. '+x.name+'</span><b>'+fmtSum(x.val)+'</b></div>'; }).join('');
+    $('abcCliA').innerHTML = (d.clientAbc.filter(function(x){return x.cls==='A';}).slice(0,12)).map(function(x,i){ return '<div class="listrow"><span>'+(i+1)+'. '+x.name+'</span><b>'+fmtSum(x.val)+'</b></div>'; }).join('');
+    // Dyn tab table
+    $('tblDyn').innerHTML = dynTable(d.monthly);
+    buildInsights(d);
+  }
+  function kpi(l,v,s,acc){ return '<div class="col-6 col-md-4 col-lg-2"><div class="kpi'+(acc?' accent':'')+'"><div class="lbl">'+l+'</div><div class="val">'+v+'</div><div class="sub">'+(s||'')+'</div></div></div>'; }
+  function kpiTrend(l,v){ var cls=v<0?'down':'up'; var arr=v<0?'↓':'↑'; return '<div class="col-6 col-md-4 col-lg-2"><div class="kpi"><div class="lbl">'+l+'</div><div class="val '+cls+'">'+(v>0?'+':'')+v+'%</div><div class="sub">'+arr+' месяц к месяцу</div></div></div>'; }
+  function abcCards(s,unit){ function c(cl,share){ return '<div class="col-4"><div class="abccard '+cl.toLowerCase()+'"><div class="g">'+cl+'</div><div class="n">'+s[cl].n+' '+unit+'</div><div class="s">'+share+'% выручки</div></div></div>'; }
+    return c('A','80')+c('B','15')+c('C','5'); }
+  function abcTable(list,label){
+    var h='<table class="tbl"><thead><tr><th>#</th><th>'+label+'</th><th>ABC</th><th class="text-end">Выручка (млн)</th><th class="text-end">Доля %</th><th class="text-end">Накопл %</th><th>Прогресс</th></tr></thead><tbody>';
+    list.forEach(function(x,i){ h+='<tr><td>'+(i+1)+'</td><td><b>'+x.name+'</b></td><td><span class="badge-abc '+x.cls+'">'+x.cls+'</span></td>'+
+      '<td class="text-end">'+fmtInt(Math.round(x.val/1e6))+'</td><td class="text-end">'+x.share+'%</td><td class="text-end">'+x.cum+'%</td>'+
+      '<td><div class="prog"><i style="width:'+Math.min(100,x.cum)+'%"></i></div></td></tr>'; });
+    return h+'</tbody></table>';
+  }
+  function dynTable(m){
+    var h='<table class="tbl"><thead><tr><th>Месяц</th><th class="text-end">Выручка</th><th class="text-end">Рост</th><th class="text-end">%</th></tr></thead><tbody>';
+    m.forEach(function(x,i){ var prev=i>0?m[i-1].net:null; var dv=prev==null?null:x.net-prev; var pc=prev? Math.round(dv/prev*1000)/10:null;
+      var cls=dv==null?'':(dv>=0?'text-success':'text-danger');
+      h+='<tr><td>'+mlabel(x.ym)+'</td><td class="text-end">'+fmtSum(x.net)+'</td><td class="text-end '+cls+'">'+(dv==null?'—':((dv>=0?'+':'')+fmtSum(dv)))+'</td><td class="text-end '+cls+'">'+(pc==null?'—':((pc>=0?'+':'')+pc+'%'))+'</td></tr>'; });
+    return h+'</tbody></table>';
+  }
+  var MON=['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+  function mlabel(ym){ var p=ym.split('-'); return MON[(+p[1])-1]+' '+p[0]; }
+
+  // ---------- Google Charts ----------
+  function opts(extra){ var o={ legend:{position:'top',textStyle:{fontSize:11}}, backgroundColor:'transparent',
+    colors:['#c2703d','#2f9e5f','#8a4b22','#6d94b8','#9b59b6'], chartArea:{left:70,right:20,top:36,bottom:60,width:'100%',height:'100%'},
+    hAxis:{textStyle:{fontSize:11}}, vAxis:{textStyle:{fontSize:11},format:'short'} };
+    for(var k in (extra||{})) o[k]=extra[k]; return o; }
+  function mcats(){ return DASH.monthly.map(function(m){return mlabel(m.ym);}); }
+
+  function draw(){ if(!READY||!DASH) return;
+    if(TAB==='overview'){ ovTrend(); ovClients(); ovSku(); }
+    if(TAB==='sku'){ skuAbc(); skuPareto(); }
+    if(TAB==='clients'){ cliAbc(); cliTop(); }
+    if(TAB==='dyn'){ dynTrend(); dynGrowth(); groupTrend(); retClients(); }
+  }
+  function ovTrend(){ if(!have('chOvTrend'))return; var t=new google.visualization.DataTable(); t.addColumn('string','Месяц'); t.addColumn('number','Выручка');
+    DASH.monthly.forEach(function(m){ t.addRow([mlabel(m.ym),m.net]); });
+    new google.visualization.AreaChart($('chOvTrend')).draw(t,opts({legend:{position:'none'},colors:['#d99a3a'],areaOpacity:0.15,curveType:'function',pointSize:4,hAxis:{slantedText:true,slantedTextAngle:45,textStyle:{fontSize:10}}})); }
+  function ovClients(){ if(!have('chOvClients'))return; var t=new google.visualization.DataTable(); t.addColumn('string','Клиент'); t.addColumn('number','Оборот');
+    DASH.topClients.slice(0,5).forEach(function(c){ t.addRow([c.name,c.val]); });
+    new google.visualization.PieChart($('chOvClients')).draw(t,opts({pieHole:0.5,chartArea:{left:10,right:10,top:20,bottom:20,width:'100%',height:'100%'},legend:{position:'right',textStyle:{fontSize:10}}})); }
+  function ovSku(){ if(!have('chOvSku'))return; var t=new google.visualization.DataTable(); t.addColumn('string','SKU'); t.addColumn('number','Выручка');
+    DASH.topSku.slice(0,10).slice().reverse().forEach(function(s){ t.addRow([s.name,s.val]); });
+    new google.visualization.BarChart($('chOvSku')).draw(t,opts({legend:{position:'none'},colors:['#2f9e5f'],chartArea:{left:200,right:30,top:10,bottom:40,width:'100%',height:'100%'}})); }
+
+  function abcDonut(el,sum){ var t=new google.visualization.DataTable(); t.addColumn('string','Класс'); t.addColumn('number','Выручка');
+    t.addRow(['A (80%)',sum.A.val]); t.addRow(['B (15%)',sum.B.val]); t.addRow(['C (5%)',sum.C.val]);
+    new google.visualization.PieChart($(el)).draw(t,opts({pieHole:0.5,colors:['#2f9e5f','#d99a3a','#c14a3f'],chartArea:{left:10,right:10,top:10,bottom:30,width:'100%',height:'100%'},legend:{position:'bottom',textStyle:{fontSize:11}}})); }
+  function skuAbc(){ if(have('chSkuAbc')) abcDonut('chSkuAbc',DASH.abcSummary); }
+  function cliAbc(){ if(have('chCliAbc')) abcDonut('chCliAbc',DASH.clientAbcSummary); }
+  function skuPareto(){ if(!have('chSkuPareto'))return; var t=new google.visualization.DataTable(); t.addColumn('string','#'); t.addColumn('number','Доля %'); t.addColumn('number','Накопл. %');
+    DASH.abc.slice(0,15).forEach(function(x,i){ t.addRow([String(i+1),x.share,x.cum]); });
+    new google.visualization.ComboChart($('chSkuPareto')).draw(t,opts({seriesType:'bars',series:{0:{targetAxisIndex:0,color:'#2f9e5f'},1:{type:'line',targetAxisIndex:1,color:'#d99a3a'}},vAxes:{0:{format:"#'%'"},1:{format:"#'%'",maxValue:100,minValue:0}},chartArea:{left:55,right:55,top:36,bottom:40,width:'100%',height:'100%'}})); }
+  function cliTop(){ if(!have('chCliTop'))return; var t=new google.visualization.DataTable(); t.addColumn('string','Клиент'); t.addColumn('number','Выручка');
+    DASH.topClients.slice().reverse().forEach(function(c){ t.addRow([c.name,c.val]); });
+    new google.visualization.BarChart($('chCliTop')).draw(t,opts({legend:{position:'none'},colors:['#2f9e5f'],chartArea:{left:150,right:30,top:10,bottom:40,width:'100%',height:'100%'}})); }
+
+  function dynTrend(){ if(!have('chDynTrend'))return; var t=new google.visualization.DataTable(); t.addColumn('string','Месяц'); t.addColumn('number','Выручка');
+    DASH.monthly.forEach(function(m){ t.addRow([mlabel(m.ym),m.net]); });
+    new google.visualization.AreaChart($('chDynTrend')).draw(t,opts({legend:{position:'none'},colors:['#d99a3a'],areaOpacity:0.15,curveType:'function',pointSize:4,hAxis:{slantedText:true,slantedTextAngle:45,textStyle:{fontSize:10}}})); }
+  function dynGrowth(){ if(!have('chDynGrowth'))return; var t=new google.visualization.DataTable(); t.addColumn('string','Месяц'); t.addColumn('number','Рост %'); t.addColumn({type:'string',role:'style'});
+    var m=DASH.monthly; for(var i=1;i<m.length;i++){ var g=m[i-1].net? Math.round((m[i].net-m[i-1].net)/m[i-1].net*1000)/10:0; t.addRow([mlabel(m[i].ym),g, g>=0?'color:#2f9e5f':'color:#c14a3f']); }
+    new google.visualization.ColumnChart($('chDynGrowth')).draw(t,opts({legend:{position:'none'},hAxis:{slantedText:true,slantedTextAngle:45,textStyle:{fontSize:9}},vAxis:{format:"#'%'"}})); }
+  function groupTrend(){ if(!have('chGroupTrend')||!DASH.dynamics)return; var dyn=DASH.dynamics; var t=new google.visualization.DataTable(); t.addColumn('string','Месяц'); dyn.groupNames.forEach(function(g){ t.addColumn('number',g); });
+    dyn.groupSeries.forEach(function(row){ var a=[mlabel(row.ym)]; dyn.groupNames.forEach(function(g){ a.push(row[g]||0); }); t.addRow(a); });
+    new google.visualization.LineChart($('chGroupTrend')).draw(t,opts({curveType:'function',colors:['#c2703d','#2f9e5f','#8a4b22','#6d94b8'],hAxis:{slantedText:true,slantedTextAngle:45,textStyle:{fontSize:9}}})); }
+  function retClients(){ if(!have('chRetClients'))return; var list=DASH.returnsByClient||[]; if(!list.length){ $('chRetClients').innerHTML='<div class="muted p-3">Возвратов нет</div>'; return; }
+    var t=new google.visualization.DataTable(); t.addColumn('string','Клиент'); t.addColumn('number','Возвраты'); list.slice().reverse().forEach(function(c){ t.addRow([c.name,c.val]); });
+    new google.visualization.BarChart($('chRetClients')).draw(t,opts({legend:{position:'none'},colors:['#c14a3f'],chartArea:{left:150,right:30,top:10,bottom:40,width:'100%',height:'100%'}})); }
+
+  function buildInsights(d){ var out=[]; var topC=d.topClients[0], topS=d.topSku[0];
+    var conc=d.topClients.slice(0,3).reduce(function(s,x){return s+x.val;},0), tp=d.kpi.sales||1;
+    if(topC) out.push('Лидер — <b>'+topC.name+'</b> ('+fmtSum(topC.val)+'). Топ-3 клиента дают ~<b>'+Math.round(conc/tp*100)+'%</b> продаж.');
+    if(topS) out.push('Топ SKU — <b>'+topS.name+'</b> ('+fmtSum(topS.val)+').');
+    if(d.abcSummary&&d.abcSummary.A) out.push('ABC: <b>'+d.abcSummary.A.n+'</b> SKU класса A дают ~80% оборота — фокус наличия на них.');
+    var m=d.monthly; if(m.length>=2) out.push('Тренд оборота: '+(m[m.length-1].net>=m[0].net?'<b>рост</b>':'<b>снижение</b>')+' ('+fmtSum(m[0].net)+' → '+fmtSum(m[m.length-1].net)+').');
+    if(d.dynamics&&d.dynamics.skuRisers&&d.dynamics.skuRisers[0]&&d.dynamics.skuRisers[0].salesChg>0) out.push('Быстрее всех растёт <b>'+d.dynamics.skuRisers[0].name+'</b> (+'+d.dynamics.skuRisers[0].salesChg+'% к пред. мес).');
+    if(d.dynamics&&d.dynamics.retRisers&&d.dynamics.retRisers[0]&&d.dynamics.retRisers[0].retChg>0) out.push('Растут возвраты по <b>'+d.dynamics.retRisers[0].name+'</b> (+'+d.dynamics.retRisers[0].retChg+'%).');
+    $('insights').innerHTML='<ul class="mb-0"><li>'+out.join('</li><li>')+'</li></ul>'; }
+
+  // tabs
+  function showTab(t){ TAB=t; hideAllPanes(); if(have('pane-'+t)) $('pane-'+t).style.display='block';
+    document.querySelectorAll('.tab').forEach(function(b){ b.classList.toggle('active', b.dataset.t===t); });
+    draw(); }
+  document.querySelectorAll('.tab').forEach(function(b){ b.addEventListener('click',function(){ showTab(this.dataset.t); }); });
+
+  document.querySelectorAll('.quick').forEach(function(b){ b.addEventListener('click',function(){
+    var mm=this.dataset.m!=null?+this.dataset.m:null, dd=this.dataset.d!=null?+this.dataset.d:null;
+    if(mm===0){ $('fFrom').value=''; $('fTo').value=''; }
+    else { var to=new Date(), from=new Date();
+      if(dd!=null) from.setDate(from.getDate()-dd); else from.setMonth(from.getMonth()-mm);
+      $('fTo').value=to.toISOString().slice(0,10); $('fFrom').value=from.toISOString().slice(0,10); }
+    loadData(); }); });
+  $('btnApply').addEventListener('click',loadData);
+  ['fClient','fGroup','fSku','fChannel'].forEach(function(id){ if($(id)) $(id).addEventListener('change',loadData); });
+  $('btnReset').addEventListener('click',function(){ $('fFrom').value=''; $('fTo').value=''; $('fClient').value=''; $('fGroup').value=''; $('fSku').value=''; if($('fChannel'))$('fChannel').value=''; loadData(); });
+  window.addEventListener('resize',function(){ draw(); });
+  // барьер: сначала пароль, автозагрузка данных только после входа
+  $('gateBtn').addEventListener('click', gateEnter);
+  $('gatePin').addEventListener('keydown', function(e){ if(e.key==='Enter') gateEnter(); });
+  window.addEventListener('load', function(){
+    google.script.run.withSuccessHandler(function(r){
+      if(!r.required){ PIN=''; $('gate').style.display='none'; $('app').style.display='block'; loadData(); }
+      else { $('gatePin').focus(); }
+    }).withFailureHandler(function(){ $('gatePin').focus(); }).checkAnalyticsPin('');
+  });
+</script>

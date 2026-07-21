@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GOLD LAVASH · Открыть приложение</title>
+<style>
+  :root{
+    --espresso:#2b1d12; --panel:#fbf7f0; --line:#e7ddcd; --muted:#8a7a64;
+    --accent:#c2703d; --accent-soft:#f3e3d2; --green:#2f7d4f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%,#3a2817,#241710 60%);color:#f3ead9;
+    display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{width:100%;max-width:440px;background:#fffdf9;color:#2b1d12;border-radius:24px;
+    box-shadow:0 30px 80px -30px rgba(0,0,0,.6);overflow:hidden}
+  .top{background:var(--espresso);color:#f7eddc;padding:26px 24px;text-align:center}
+  .logo{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#c2703d,#9d5126);
+    display:grid;place-items:center;margin:0 auto 12px;font-size:30px;box-shadow:0 10px 24px -10px rgba(0,0,0,.5)}
+  .top h1{margin:0;font-size:20px;letter-spacing:-.3px}
+  .top p{margin:6px 0 0;font-size:13px;color:#cdbda3}
+  .body{padding:22px 24px 26px}
+  .btn{display:block;width:100%;text-align:center;text-decoration:none;background:var(--accent);color:#fff;
+    font-weight:800;font-size:16px;padding:15px 18px;border-radius:14px;box-shadow:0 12px 26px -12px rgba(194,112,61,.8)}
+  .btn:active{transform:translateY(1px)}
+  .qrwrap{margin:20px auto 6px;text-align:center}
+  .qrwrap img{width:220px;height:220px;border-radius:16px;border:1px solid var(--line);background:#fff;padding:8px}
+  .qrcap{font-size:12.5px;color:var(--muted);margin-top:8px}
+  .steps{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}
+  .steps h3{margin:0 0 10px;font-size:14px}
+  .row{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;font-size:13px;line-height:1.5}
+  .num{flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:#8a4b22;
+    display:grid;place-items:center;font-weight:800;font-size:12px;margin-top:1px}
+  .tab{display:flex;gap:8px;margin:14px 0 6px}
+  .tab button{flex:1;padding:9px;border:1px solid var(--line);background:#fff;border-radius:10px;font-weight:700;
+    font-size:13px;cursor:pointer;color:#2b1d12}
+  .tab button.active{background:var(--accent-soft);border-color:#e3c8ad}
+  .note{font-size:11.5px;color:var(--muted);margin-top:14px;text-align:center}
+  .hide{display:none}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="top">
+      <div class="logo">🥖</div>
+      <h1>GOLD LAVASH</h1>
+      <p>Заказы · Отправка · Логистика</p>
+    </div>
+    <div class="body">
+      <a class="btn" id="openBtn" href="#">Открыть приложение</a>
+
+      <div class="qrwrap">
+        <img id="qr" alt="QR-код приложения">
+        <div class="qrcap">Наведите камеру телефона на QR — откроется приложение</div>
+      </div>
+
+      <div class="steps">
+        <h3>Как установить на телефон (иконка как у приложения)</h3>
+        <div class="tab">
+          <button id="tAndroid" class="active" onclick="setOS('android')">Android</button>
+          <button id="tIos" onclick="setOS('ios')">iPhone</button>
+        </div>
+        <div id="android">
+          <div class="row"><div class="num">1</div><div>Откройте приложение кнопкой выше (в браузере Chrome).</div></div>
+          <div class="row"><div class="num">2</div><div>Нажмите меню <b>⋮</b> в правом верхнем углу.</div></div>
+          <div class="row"><div class="num">3</div><div>Выберите <b>«Добавить на главный экран»</b> → «Добавить».</div></div>
+          <div class="row"><div class="num">4</div><div>На экране появится иконка <b>GOLD LAVASH</b> — открывайте в один тап.</div></div>
+        </div>
+        <div id="ios" class="hide">
+          <div class="row"><div class="num">1</div><div>Откройте приложение кнопкой выше в браузере <b>Safari</b>.</div></div>
+          <div class="row"><div class="num">2</div><div>Нажмите кнопку <b>«Поделиться»</b> (квадрат со стрелкой) внизу.</div></div>
+          <div class="row"><div class="num">3</div><div>Выберите <b>«На экран «Домой»»</b> → «Добавить».</div></div>
+          <div class="row"><div class="num">4</div><div>Иконка <b>GOLD LAVASH</b> появится на экране телефона.</div></div>
+        </div>
+      </div>
+
+      <div class="note">Вход в приложение — по вашему логину и паролю.</div>
+    </div>
+  </div>
+
+<script>
+  // Адрес приложения (…/exec). При смене развёртывания — впишите новый.
+  var APP_URL = 'https://script.google.com/macros/s/AKfycbwQXZ_vJOp1zk99jBLqz2mpHrCAIY90vMi8s9SJ_M_Q3W8Yaq9RKzZlW2AbFAH1gUd3/exec';
+  document.getElementById('openBtn').href = APP_URL;
+  document.getElementById('qr').src =
+    'https://api.qrserver.com/v1/create-qr-code/?size=440x440&margin=8&data=' + encodeURIComponent(APP_URL);
+  function setOS(os){
+    var a=os==='android';
+    document.getElementById('android').classList.toggle('hide', !a);
+    document.getElementById('ios').classList.toggle('hide', a);
+    document.getElementById('tAndroid').classList.toggle('active', a);
+    document.getElementById('tIos').classList.toggle('active', !a);
+  }
+  // авто-вкладка по устройству
+  if(/iPhone|iPad|iPod/i.test(navigator.userAgent)) setOS('ios');
+</script>
+</body>
+</html>

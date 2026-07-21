@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <?!= include('AnalyticsCss'); ?>
+</head>
+<body>
+  <div id="gate">
+    <div class="gate-box">
+      <div class="gate-logo">🥖 GOLD LAVASH</div>
+      <div class="gate-title">Аналитика продаж</div>
+      <div class="gate-sub">Введите пароль для доступа</div>
+      <input type="password" id="gatePin" class="form-control mt-3" placeholder="Пароль" autocomplete="off">
+      <button class="btn btn-primary w-100 mt-2" id="gateBtn">Войти</button>
+      <div id="gateErr" class="gate-err"></div>
+    </div>
+  </div>
+  <div id="app" style="display:none">
+  <nav class="topbar">
+    <div class="container-xxl d-flex align-items-center gap-3 py-2 flex-wrap">
+      <div class="brand">🥖 GOLD LAVASH <span>· Аналитика продаж</span><div class="sub" id="periodInfo"></div></div>
+      <div class="tabs ms-auto" id="tabs">
+        <button class="tab active" data-t="overview">📊 Обзор</button>
+        <button class="tab" data-t="sku">🥖 SKU</button>
+        <button class="tab" data-t="clients">👥 Клиенты</button>
+        <button class="tab" data-t="abc">🎯 ABC</button>
+        <button class="tab" data-t="dyn">📈 Динамика</button>
+        <a class="tab" style="text-decoration:none" href="<?= ScriptApp.getService().getUrl() ?>" target="_top">← В приложение</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-xxl py-3">
+    <!-- Фильтры -->
+    <div class="card card-flt mb-3"><div class="card-body py-2">
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-2"><label class="form-label mb-1">С даты</label><input type="date" id="fFrom" class="form-control form-control-sm"></div>
+        <div class="col-6 col-md-2"><label class="form-label mb-1">По дату</label><input type="date" id="fTo" class="form-control form-control-sm"></div>
+        <div class="col-6 col-md-2"><label class="form-label mb-1">Клиент</label><select id="fClient" class="form-select form-select-sm"><option value="">Все клиенты</option></select></div>
+        <div class="col-6 col-md-2"><label class="form-label mb-1">Канал</label><select id="fChannel" class="form-select form-select-sm"><option value="">Все каналы</option></select></div>
+        <div class="col-6 col-md-2"><label class="form-label mb-1">Группа</label><select id="fGroup" class="form-select form-select-sm"><option value="">Все группы</option></select></div>
+        <div class="col-6 col-md-2"><label class="form-label mb-1">SKU</label><select id="fSku" class="form-select form-select-sm"><option value="">Все SKU</option></select></div>
+      </div>
+      <div class="d-flex gap-2 flex-wrap mt-2">
+        <button class="btn btn-sm btn-primary" id="btnApply">Применить</button>
+        <button class="btn btn-sm btn-outline-secondary" id="btnReset">Сброс</button>
+        <button class="btn btn-sm btn-outline-secondary quick" data-d="7">Неделя</button>
+        <button class="btn btn-sm btn-outline-secondary quick" data-d="14">2 недели</button>
+        <button class="btn btn-sm btn-outline-secondary quick" data-m="1">Месяц</button>
+        <button class="btn btn-sm btn-outline-secondary quick" data-m="3">3 мес</button>
+        <button class="btn btn-sm btn-outline-secondary quick" data-m="6">6 мес</button>
+        <button class="btn btn-sm btn-outline-secondary quick" data-m="12">12 мес</button>
+        <button class="btn btn-sm btn-outline-secondary quick" data-m="0">Всё</button>
+      </div>
+    </div></div>
+
+    <div id="loading" class="text-center text-muted py-5">Загрузка данных…</div>
+
+    <!-- ================= ОБЗОР ================= -->
+    <section class="pane" id="pane-overview" style="display:none">
+      <div class="row g-2 g-md-3 mb-1" id="kpiRow"></div>
+      <div class="row g-3 mt-0" id="hlRow"></div>
+      <div class="row g-3 mt-1">
+        <div class="col-12 col-lg-8"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Динамика выручки <span class="muted">· по месяцам</span></h6><div id="chOvTrend" class="chart"></div>
+        </div></div></div>
+        <div class="col-12 col-lg-4"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Топ-5 клиентов <span class="muted">· доля</span></h6><div id="chOvClients" class="chart"></div>
+        </div></div></div>
+      </div>
+      <div class="row g-3 mt-1">
+        <div class="col-12 col-lg-8"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Топ-10 SKU <span class="muted">· по выручке</span></h6><div id="chOvSku" class="chart"></div>
+        </div></div></div>
+        <div class="col-12 col-lg-4"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Возвраты по SKU <span class="muted">· по количеству</span></h6><div id="ovReturns"></div>
+        </div></div></div>
+      </div>
+    </section>
+
+    <!-- ================= SKU ================= -->
+    <section class="pane" id="pane-sku" style="display:none">
+      <div class="row g-3">
+        <div class="col-12 col-lg-6"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">ABC-анализ SKU <span class="muted" id="skuCount"></span></h6>
+          <div class="row g-2" id="skuAbcCards"></div>
+          <div id="chSkuAbc" class="chart" style="height:230px"></div>
+        </div></div></div>
+        <div class="col-12 col-lg-6"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Парето-кривая SKU <span class="muted">· 80/20</span></h6><div id="chSkuPareto" class="chart"></div>
+        </div></div></div>
+      </div>
+      <div class="row g-3 mt-1"><div class="col-12"><div class="card"><div class="card-body">
+        <h6 class="chart-title">Таблица SKU <span class="muted">· топ-20</span></h6><div id="tblSku" class="table-responsive"></div>
+      </div></div></div></div>
+    </section>
+
+    <!-- ================= КЛИЕНТЫ ================= -->
+    <section class="pane" id="pane-clients" style="display:none">
+      <div class="row g-3">
+        <div class="col-12 col-lg-6"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">ABC-анализ клиентов <span class="muted" id="cliCount"></span></h6>
+          <div class="row g-2" id="cliAbcCards"></div>
+          <div id="chCliAbc" class="chart" style="height:230px"></div>
+        </div></div></div>
+        <div class="col-12 col-lg-6"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Топ-10 клиентов <span class="muted">· выручка</span></h6><div id="chCliTop" class="chart"></div>
+        </div></div></div>
+      </div>
+      <div class="row g-3 mt-1"><div class="col-12"><div class="card"><div class="card-body">
+        <h6 class="chart-title">Детализация клиентов <span class="muted">· топ-20</span></h6><div id="tblClients" class="table-responsive"></div>
+      </div></div></div></div>
+    </section>
+
+    <!-- ================= ABC ================= -->
+    <section class="pane" id="pane-abc" style="display:none">
+      <div class="row g-3">
+        <div class="col-12 col-lg-4"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Что такое ABC</h6>
+          <p class="mb-2"><b class="txt-a">A — приоритет №1.</b> 80% выручки. Максимум внимания, постоянный мониторинг.</p>
+          <p class="mb-2"><b class="txt-b">B — потенциал роста.</b> 15% выручки. Развитие, цель — перевод в A.</p>
+          <p class="mb-0"><b class="txt-c">C — оптимизация.</b> 5% выручки. Стандартные условия, ревизия слабых позиций.</p>
+        </div></div></div>
+        <div class="col-12 col-lg-4"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Класс A — SKU</h6><div id="abcSkuA"></div>
+        </div></div></div>
+        <div class="col-12 col-lg-4"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Класс A — Клиенты</h6><div id="abcCliA"></div>
+        </div></div></div>
+      </div>
+      <div class="row g-3 mt-1"><div class="col-12"><div class="card"><div class="card-body">
+        <h6 class="chart-title">Рекомендации</h6>
+        <div class="row g-2">
+          <div class="col-12 col-md-4"><div class="rec rec-a"><b>✅ Группа A — защитить</b><div>Никаких перебоев поставок. Страховой запас 2+ недели. Приоритет производства.</div></div></div>
+          <div class="col-12 col-md-4"><div class="rec rec-b"><b>📈 Группа B — развить</b><div>Маркетинговые акции, расширение ассортимента. Цель — перевод в A.</div></div></div>
+          <div class="col-12 col-md-4"><div class="rec rec-c"><b>♻️ Группа C — оптимизировать</b><div>Ревизия слабых позиций, фокус ресурсов на A и B.</div></div></div>
+        </div>
+      </div></div></div></div>
+    </section>
+
+    <!-- ================= ДИНАМИКА ================= -->
+    <section class="pane" id="pane-dyn" style="display:none">
+      <div class="row g-3"><div class="col-12"><div class="card"><div class="card-body">
+        <h6 class="chart-title">Полная динамика выручки <span class="muted">· млрд сум</span></h6><div id="chDynTrend" class="chart" style="height:340px"></div>
+      </div></div></div></div>
+      <div class="row g-3 mt-1">
+        <div class="col-12 col-lg-6"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Рост месяц к месяцу <span class="muted">· %</span></h6><div id="chDynGrowth" class="chart"></div>
+        </div></div></div>
+        <div class="col-12 col-lg-6"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Таблица динамики</h6><div id="tblDyn" class="table-responsive"></div>
+        </div></div></div>
+      </div>
+      <div class="row g-3 mt-1">
+        <div class="col-12 col-lg-6"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Динамика по группам <span class="muted">· нетто по месяцам</span></h6><div id="chGroupTrend" class="chart"></div>
+        </div></div></div>
+        <div class="col-12 col-lg-6"><div class="card h-100"><div class="card-body">
+          <h6 class="chart-title">Возвраты по клиентам</h6><div id="chRetClients" class="chart"></div>
+        </div></div></div>
+      </div>
+      <div class="row g-3 mt-1 mb-4"><div class="col-12"><div class="card"><div class="card-body">
+        <h6 class="chart-title">📌 Выводы и рекомендации</h6><div id="insights" class="insights"></div>
+      </div></div></div></div>
+    </section>
+  </div>
+
+  </div><!-- /#app -->
+
+  <?!= include('AnalyticsJs'); ?>
+</body>
+</html>
