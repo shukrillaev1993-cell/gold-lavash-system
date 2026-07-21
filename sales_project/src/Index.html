@@ -2833,11 +2833,17 @@ function norm2(s){ return String(s||'').toLowerCase().replace(/\s+/g,' ').trim()
 function bankSave(){
   var toSave=_bank.rows.filter(function(r){ return !r.dup && r.region && r.amount>0; });
   if(!toSave.length){ toast('Нет платежей к сохранению (укажите регион у ненайденных)',true); return; }
+  var newOnes=toSave.filter(function(r){ return !r.matched; });
+  var remember=false;
+  if(newOnes.length){
+    remember=confirm('Найдено '+newOnes.length+' плательщик(ов), которых нет в справочнике «Контракты» (ИНН впервые). '+
+      'Сохранить их туда, чтобы в следующий раз выписка распознавала их сама?');
+  }
   var btn=$('#bkSave'); btn.disabled=true; btn.innerHTML='<span class="loading"></span>';
-  gas('saveBankReceipts',S.user.login,toSave).then(function(r){
+  gas('saveBankReceipts',S.user.login,toSave,remember).then(function(r){
     btn.disabled=false; btn.innerHTML='Сохранить в «Поступление»';
-    $('#bkResult').innerHTML='<div class="ok-card"><div class="ico">✓</div><div>Сохранено: <b>'+r.saved+'</b> на сумму <b>'+money(r.total)+'</b> сум'+(r.skipped?(' · пропущено повторных: <b>'+r.skipped+'</b>'):'')+'.</div></div>';
-    toast('Разнесено '+r.saved+' платежей'+(r.skipped?(', пропущено '+r.skipped):''));
+    $('#bkResult').innerHTML='<div class="ok-card"><div class="ico">✓</div><div>Сохранено: <b>'+r.saved+'</b> на сумму <b>'+money(r.total)+'</b> сум'+(r.skipped?(' · пропущено повторных: <b>'+r.skipped+'</b>'):'')+(r.addedContracts?(' · новых контрактов сохранено: <b>'+r.addedContracts+'</b>'):'')+'.</div></div>';
+    toast('Разнесено '+r.saved+' платежей'+(r.skipped?(', пропущено '+r.skipped):'')+(r.addedContracts?(', контрактов: '+r.addedContracts):''));
   }).catch(function(e){ btn.disabled=false; btn.innerHTML='Сохранить в «Поступление»'; toast(String(e.message||e),true); });
 }
 

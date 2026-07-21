@@ -2435,8 +2435,31 @@ function getBankMatch(loginName, payments){
   });
   return { rows:rows, regions:map.regions };
 }
+// Дописать в лист «Контракты» новые ИНН, которых там ещё не было — чтобы в следующий раз
+// авторазноска находила их сама, без повторного ручного выбора региона.
+function saveContractMappings_(newMappings){
+  if(!newMappings || !newMappings.length) return 0;
+  var sh=getSheetFuzzy('Контракты');
+  if(!sh){ sh=ss().insertSheet('Контракты');
+    sh.getRange(1,1,1,3).setValues([['ИНН','Клиент','Регион/Филиал']]).setFontWeight('bold'); sh.setFrozenRows(1); }
+  var existing=readContractsMap_().byInn;
+  var seen={}, toAdd=[];
+  newMappings.forEach(function(m){
+    var inn=String(m.inn||'').replace(/\D/g,'');
+    if(!inn || existing[inn] || seen[inn]) return;
+    seen[inn]=1;
+    toAdd.push([inn, m.client||'', m.region]);
+  });
+  if(toAdd.length){
+    var lock=acquireLock_();
+    try{ sh.getRange(sh.getLastRow()+1,1,toAdd.length,3).setValues(toAdd); } finally{ try{lock.releaseLock();}catch(e){} }
+  }
+  return toAdd.length;
+}
 // Сохранить платежи в «Поступление» (зачисление на регион/филиал, плательщик — в примечании).
-function saveBankReceipts(loginName, rows){
+// rememberNew: если true — платежи, которые не были распознаны по ИНН автоматически (matched=false),
+// но которым сейчас вручную назначен регион, дописываются в «Контракты» для будущей авторазноски.
+function saveBankReceipts(loginName, rows, rememberNew){
   var user=authUser_(loginName);
   if(['admin','manager'].indexOf(user.role)<0) throw new Error('Разнос выписки доступен менеджеру или администратору.');
   var sh=getSheetFuzzy('Поступление'); if(!sh) throw new Error('Лист «Поступление» не найден.');
@@ -2449,13 +2472,14 @@ function saveBankReceipts(loginName, rows){
   var width=Math.max(H.length,6);
   var seen=keysFromValues_(values, cNote);               // уже сохранённые ключи (из тех же данных)
   var batch={};                               // защита от дублей внутри одной загрузки
-  var toWrite=[], cnt=0, tot=0, skipped=0;
+  var toWrite=[], cnt=0, tot=0, skipped=0, newMappings=[];
   (rows||[]).forEach(function(p){
     var region=String(p.region||'').trim(); var sum=toNum(p.amount);
     if(!region || !(sum>0)) return;
     var key=bankKey_(p);
     if(seen[key] || batch[key]){ skipped++; return; }   // уже загружали — пропускаем
     batch[key]=1;
+    if(rememberNew && !p.matched && p.inn) newMappings.push({inn:p.inn, client:p.name, region:region});
     var note='Банк: '+String(p.name||'')+(p.inn?(' (ИНН '+p.inn+')'):'')+(p.purpose?(' · '+p.purpose):'')+' #K:'+key;
     var row=[]; for(var i=0;i<width;i++) row.push('');
     if(cNo>=0)   row[cNo]=(++maxNo);
@@ -2466,10 +2490,11 @@ function saveBankReceipts(loginName, rows){
     if(cNote>=0) row[cNote]=note;
     toWrite.push(row); cnt++; tot+=sum;
   });
-  if(!toWrite.length) return { ok:true, saved:0, total:0, skipped:skipped };
+  var addedContracts = newMappings.length ? saveContractMappings_(newMappings) : 0;
+  if(!toWrite.length) return { ok:true, saved:0, total:0, skipped:skipped, addedContracts:addedContracts };
   var lock=acquireLock_();
   try{ sh.getRange(sh.getLastRow()+1,1,toWrite.length,width).setValues(toWrite); } finally{ try{lock.releaseLock();}catch(e){} }
-  return { ok:true, saved:cnt, total:Math.round(tot), skipped:skipped };
+  return { ok:true, saved:cnt, total:Math.round(tot), skipped:skipped, addedContracts:addedContracts };
 }
 
 // Отчёт по поступлениям (admin / manager / viewer).
