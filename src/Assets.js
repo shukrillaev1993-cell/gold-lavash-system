@@ -1062,7 +1062,9 @@ function assetsUploadPhotoPublic(base64Data, fileName, dept, invNum) {
     var file = folder.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     var fileId = file.getId();
-    var url = 'https://drive.google.com/uc?export=view&id=' + fileId;
+    // uc?export=view часто не отдаёт саму картинку в <img> (Google подменяет
+    // предупреждением) — thumbnail-эндпоинт отдаёт байты картинки надёжно.
+    var url = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1000';
     if (invNum) assetsUpdateFieldPublic(invNum, 'Фото URL', url);
     return {ok: true, fileId: fileId, url: url};
   } catch (e) {

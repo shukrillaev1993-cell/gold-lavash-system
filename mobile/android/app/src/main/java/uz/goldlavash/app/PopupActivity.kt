@@ -2,12 +2,9 @@ package uz.goldlavash.app
 
 import android.Manifest
 import android.app.AlertDialog
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.ConnectivityManager
 import android.net.Uri
-import android.net.http.SslError
 import android.os.Bundle
 import android.os.Message
 import android.provider.MediaStore
@@ -15,7 +12,6 @@ import android.view.View
 import android.webkit.JsPromptResult
 import android.webkit.JsResult
 import android.webkit.PermissionRequest
-import android.webkit.SslErrorHandler
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -24,35 +20,36 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 /**
- * Обёртка (WebView) над веб-системой GOLD LAVASH.
- * Открывает мобильную версию системы (?mobile=1) и даёт нативный доступ
- * к камере телефона для полей вида <input type="file" capture="environment">
- * (загрузка фото ОС, инвентаризация и т.д.) — обычный WebView без этого
- * кода камеру не откроет, а покажет только выбор файла из галереи.
+ * Отдельный экран для страниц, которые открываются через window.open()
+ * из основного WebView (Карточка ОС, Фото ОС, Печать наклеек).
+ * Открывается ПОВЕРХ MainActivity, а не внутри его WebView — так сессия
+ * входа в главном приложении не теряется, и есть явная кнопка "Назад".
  */
-class MainActivity : AppCompatActivity() {
+class PopupActivity : AppCompatActivity() {
+
+    companion object {
+        const val EXTRA_URL = "url"
+    }
 
     private lateinit var webView: WebView
-    private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressBar: ProgressBar
-    private lateinit var offlineView: LinearLayout
 
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private var pendingCameraUri: Uri? = null
+    private var lastAcceptTypes: Array<String> = arrayOf("image/*")
+    private var lastAllowMultiple: Boolean = false
 
     private val cameraPermissionLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -60,16 +57,12 @@ class MainActivity : AppCompatActivity() {
             else launchFileChooserIntents(lastAcceptTypes, lastAllowMultiple, includeCamera = false)
         }
 
-    private var lastAcceptTypes: Array<String> = arrayOf("image/*")
-    private var lastAllowMultiple: Boolean = false
-
     private val fileChooserLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             var resultUris: Array<Uri>? = null
             if (result.resultCode == RESULT_OK) {
                 val data = result.data
                 if (data == null || data.data == null && data.clipData == null) {
-                    // Снято на камеру — результата в data нет, файл лежит по pendingCameraUri
                     pendingCameraUri?.let { resultUris = arrayOf(it) }
                 } else {
                     val clip = data.clipData
@@ -87,51 +80,30 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_popup)
 
-        webView = findViewById(R.id.webView)
-        swipeRefresh = findViewById(R.id.swipeRefresh)
-        progressBar = findViewById(R.id.progressBar)
-        offlineView = findViewById(R.id.offlineView)
-
-        findViewById<Button>(R.id.retryButton).setOnClickListener { loadApp() }
-        // Свайп-обновление перезагружает страницу целиком, а сессия входа
-        // хранится только в памяти открытой страницы (не в localStorage) —
-        // после такой перезагрузки система разлогинивает пользователя.
-        // Поэтому жест отключаем; сам SwipeRefreshLayout оставляем только
-        // как контейнер layout'а.
-        swipeRefresh.isEnabled = false
+        webView = findViewById(R.id.popupWebView)
+        progressBar = findViewById(R.id.popupProgressBar)
+        findViewById<Button>(R.id.popupBackButton).setOnClickListener { finish() }
 
         setupWebView()
-        loadApp()
+
+        val url = intent.getStringExtra(EXTRA_URL)
+        if (url != null) webView.loadUrl(url) else finish()
     }
 
     private fun setupWebView() {
         val s: WebSettings = webView.settings
         s.javaScriptEnabled = true
         s.domStorageEnabled = true
-        s.databaseEnabled = true
-        s.mediaPlaybackRequiresUserGesture = false
-        s.cacheMode = WebSettings.LOAD_DEFAULT
-        // Позволяем щипком увеличивать мелкие кнопки/текст (сама страница
-        // рассчитана на десктоп, не на телефон) — кнопки зума скрыты,
-        // остаётся только жест "щипок".
         s.setSupportZoom(true)
         s.builtInZoomControls = true
         s.displayZoomControls = false
-        s.setSupportMultipleWindows(true)
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 progressBar.visibility = View.GONE
-                swipeRefresh.isRefreshing = false
-            }
-
-            override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: SslError?) {
-                // Google-домены — доверенный HTTPS, ошибок сертификата тут не бывает.
-                // Отклоняем по умолчанию (безопасное поведение), ничего не переопределяем.
-                super.onReceivedSslError(view, handler, error)
             }
         }
 
@@ -154,7 +126,7 @@ class MainActivity : AppCompatActivity() {
                     lastAcceptTypes.any { it.startsWith("image") }
 
                 if (wantsCamera && ContextCompat.checkSelfPermission(
-                        this@MainActivity, Manifest.permission.CAMERA
+                        this@PopupActivity, Manifest.permission.CAMERA
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
                     cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -165,52 +137,13 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPermissionRequest(request: PermissionRequest?) {
-                // JS getUserMedia() не используется в системе (фото идёт через
-                // input[type=file][capture]) — отклоняем на всякий случай.
                 request?.deny()
             }
 
-            // Обычный WebView молча игнорирует window.open()/target=_blank —
-            // именно так открываются страницы "Карточка ОС", "Фото", "Печать
-            // наклеек". Перехватываем адрес и открываем его в отдельном
-            // экране (PopupActivity), а не в этом же WebView — иначе
-            // страница логина перезаписывает уже вошедшую в систему сессию,
-            // и вернуться в основное приложение было нечем.
-            override fun onCreateWindow(
-                view: WebView?,
-                isDialog: Boolean,
-                isUserGesture: Boolean,
-                resultMsg: Message?
-            ): Boolean {
-                val transport = resultMsg?.obj as? WebView.WebViewTransport
-                val popupWebView = WebView(this@MainActivity)
-                popupWebView.webViewClient = object : WebViewClient() {
-                    override fun shouldOverrideUrlLoading(
-                        v: WebView?,
-                        request: WebResourceRequest?
-                    ): Boolean {
-                        request?.url?.let {
-                            startActivity(
-                                Intent(this@MainActivity, PopupActivity::class.java)
-                                    .putExtra(PopupActivity.EXTRA_URL, it.toString())
-                            )
-                        }
-                        return true
-                    }
-                }
-                transport?.webView = popupWebView
-                resultMsg?.sendToTarget()
-                return true
-            }
-
-            // Без этих трёх переопределений confirm()/alert()/prompt() из
-            // веб-страницы (их в системе много — подтверждения удаления,
-            // списания, выхода и т.д.) не показываются вообще, и связанная
-            // с ними кнопка выглядит "нерабочей".
             override fun onJsAlert(
                 view: WebView?, url: String?, message: String?, result: JsResult?
             ): Boolean {
-                AlertDialog.Builder(this@MainActivity)
+                AlertDialog.Builder(this@PopupActivity)
                     .setMessage(message)
                     .setPositiveButton("OK") { _, _ -> result?.confirm() }
                     .setOnCancelListener { result?.cancel() }
@@ -222,7 +155,7 @@ class MainActivity : AppCompatActivity() {
             override fun onJsConfirm(
                 view: WebView?, url: String?, message: String?, result: JsResult?
             ): Boolean {
-                AlertDialog.Builder(this@MainActivity)
+                AlertDialog.Builder(this@PopupActivity)
                     .setMessage(message)
                     .setPositiveButton("OK") { _, _ -> result?.confirm() }
                     .setNegativeButton("Отмена") { _, _ -> result?.cancel() }
@@ -239,9 +172,9 @@ class MainActivity : AppCompatActivity() {
                 defaultValue: String?,
                 result: JsPromptResult?
             ): Boolean {
-                val input = EditText(this@MainActivity)
+                val input = EditText(this@PopupActivity)
                 input.setText(defaultValue)
-                AlertDialog.Builder(this@MainActivity)
+                AlertDialog.Builder(this@PopupActivity)
                     .setMessage(message)
                     .setView(input)
                     .setPositiveButton("OK") { _, _ -> result?.confirm(input.text.toString()) }
@@ -268,7 +201,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         val intentsToShow = mutableListOf<Intent>()
-
         if (includeCamera) {
             createCameraCaptureIntent()?.let { intentsToShow.add(it) }
         }
@@ -287,40 +219,14 @@ class MainActivity : AppCompatActivity() {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val imagesDir = (getExternalFilesDir("images") ?: filesDir).apply { mkdirs() }
         val photoFile = File.createTempFile("OS_${timeStamp}_", ".jpg", imagesDir)
-        val photoUri = FileProvider.getUriForFile(
-            this, "$packageName.fileprovider", photoFile
-        )
+        val photoUri = FileProvider.getUriForFile(this, "$packageName.fileprovider", photoFile)
         pendingCameraUri = photoUri
         captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
         captureIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
         return captureIntent
     }
 
-    private fun loadApp() {
-        if (isOnline()) {
-            offlineView.visibility = View.GONE
-            progressBar.visibility = View.VISIBLE
-            webView.visibility = View.VISIBLE
-            webView.loadUrl(getString(R.string.app_url))
-        } else {
-            offlineView.visibility = View.VISIBLE
-            webView.visibility = View.GONE
-            swipeRefresh.isRefreshing = false
-        }
-    }
-
-    private fun isOnline(): Boolean {
-        val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = cm.activeNetwork ?: return false
-        val capabilities = cm.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
-    }
-
     override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
-        }
+        if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
     }
 }

@@ -108,16 +108,20 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
     }
 
     // window.open()/target="_blank" (страницы "Карточка ОС", "Фото ОС",
-    // "Печать наклеек") без этого метода WKWebView просто ничего не делает —
-    // грузим адрес в том же webView вместо открытия нового окна.
+    // "Печать наклеек") без этого метода WKWebView просто ничего не делает.
+    // Открываем адрес на отдельном модальном экране, а не в этом же
+    // webView — иначе страница логина перезаписывает уже вошедшую в
+    // систему сессию, и вернуться в основное приложение было нечем.
     func webView(
         _ webView: WKWebView,
         createWebViewWith configuration: WKWebViewConfiguration,
         for navigationAction: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
-        if navigationAction.targetFrame == nil {
-            webView.load(navigationAction.request)
+        if navigationAction.targetFrame == nil, let url = navigationAction.request.url {
+            let popup = PopupViewController(url: url)
+            popup.modalPresentationStyle = .fullScreen
+            present(popup, animated: true)
         }
         return nil
     }
