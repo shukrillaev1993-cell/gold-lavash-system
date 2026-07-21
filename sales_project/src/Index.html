@@ -2198,6 +2198,9 @@ function renderAkt(a, bodyId){
     if(o.kind==='Реализация' && o.id && canEditShip){
       docCell += ' <button class="btn ghost sm" data-akt-edit-ship="'+esc(o.id)+'" style="padding:2px 8px;margin-left:6px">✎</button>';
     }
+    if((o.kind==='Возврат' || o.kind==='Тара') && o.id){
+      docCell += ' <button class="btn ghost sm" data-akt-view-ret="'+esc(o.id)+'" style="padding:2px 8px;margin-left:6px">👁 Просмотр</button>';
+    }
     html+='<tr><td>'+o.date+'</td><td>'+docCell+'</td>'+
       '<td class="r num">'+(o.debit?money(o.debit):'')+'</td>'+
       '<td class="r num">'+(o.credit?money(o.credit):'')+'</td>'+
@@ -2214,6 +2217,24 @@ function renderAkt(a, bodyId){
   $all(bodyId+' [data-akt-edit-ship]').forEach(function(b){ b.addEventListener('click',function(e){
     e.stopPropagation(); goEditShipment(this.dataset.aktEditShip);
   }); });
+  $all(bodyId+' [data-akt-view-ret]').forEach(function(b){ b.addEventListener('click',function(e){
+    e.stopPropagation(); viewReturnDoc(this.dataset.aktViewRet);
+  }); });
+}
+// Просмотр возврата (только чтение) — печатная форма, доступна независимо от прав на изменение.
+function viewReturnDoc(id){
+  gas('getReturnById', S.user.login, id).then(function(g){
+    var rows=g.lines.map(function(l,i){ return '<tr><td>'+(i+1)+'</td><td>'+esc(l.name)+'</td><td class="r">'+num(l.qty)+
+      '</td><td>'+esc(l.reason||'')+'</td><td>'+esc(l.place||'')+'</td><td class="r">'+money(l.sum)+'</td></tr>'; }).join('');
+    $('#printRoot').innerHTML='<div class="doc">'+logoImg()+'<h1>АКТ ВОЗВРАТА № '+g.returnId+'</h1>'+
+      '<div class="meta"><div><b>Клиент:</b> '+esc(g.client)+'<br><b>Дата:</b> '+g.date+'</div>'+
+      '<div><b>Режим цены:</b> '+esc(g.mode||'')+'<br><b>Статус:</b> '+esc(g.status||'')+'</div></div>'+
+      (g.comment?('<p><b>Комментарий:</b> '+esc(g.comment)+'</p>'):'')+
+      '<table><thead><tr><th>№</th><th>Товар</th><th class="r">Кол-во</th><th>Причина</th><th>Где выявлено</th><th class="r">Сумма</th></tr></thead>'+
+      '<tbody>'+rows+'</tbody><tfoot><tr><td colspan="2" class="r">ИТОГО</td><td class="r">'+num(g.qty)+'</td><td></td><td></td><td class="r">'+money(g.sum)+'</td></tr></tfoot></table>'+
+      '<div class="sign"><div>Сдал: ______________</div><div>Принял: ______________</div></div></div>';
+    window.print();
+  }).catch(function(e){ toast(String(e.message||e), true); });
 }
 function printAkt(){
   if(!_akt){toast('Сначала сформируйте акт',true);return;}

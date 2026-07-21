@@ -2280,7 +2280,8 @@ function getKassaReceipts(loginName){
     var d=r[1];                      // Дата
     if(!(d instanceof Date)) continue;
     if(d.getTime() < KASSA_FROM.getTime()) continue;
-    var amount=toNum(r[2]);          // сумма (сўмда)
+    // сумма = приход в сумах + приход в долларах * курс (некоторые клиенты платят частично/полностью в валюте)
+    var amount=toNum(r[2]) + toNum(r[3])*toNum(r[4]);
     if(!(amount>0)) continue;
     var source=String(r[6]||'').trim();     // Источник
     var region=kassaRegion_(source, regions);
@@ -2353,7 +2354,9 @@ function kassaAutoImport(){
     var row=v[i]; var d=row[1];
     if(!(d instanceof Date)) continue;
     if(d.getTime() < KASSA_FROM.getTime()) continue;
-    var amount=toNum(row[2]); if(!(amount>0)) continue;
+    // сумма = приход в сумах + приход в долларах * курс (некоторые клиенты платят частично/полностью в валюте)
+    var amount=toNum(row[2]) + toNum(row[3])*toNum(row[4]);
+    if(!(amount>0)) continue;
     var source=String(row[6]||'').trim();
     var region=kassaRegion_(source, regions);
     if(!region){ noReg++; continue; }
