@@ -897,7 +897,7 @@ function gas(fn){var args=Array.prototype.slice.call(arguments,1);
     r[fn].apply(r,args);
   });}
 
-var S = { user:null, boot:null, order:{client:'',q:{}}, ship:{client:'',orderId:'',rows:[]},
+var S = { user:null, boot:null, order:{client:'',q:{}}, ship:{client:'',orderId:'',rows:[],editId:null},
           add:{client:'',orderId:'',q:{},expired:false}, reports:null, debtor:null,
           ret:{client:'',q:{},editingId:null}, retInit:null };
 var abcDim='sku', abcMeasure='orderedSum';
@@ -1239,7 +1239,8 @@ function showOrderResult(r){
 
 /* ===================== SHIPMENT ===================== */
 $('#sClient').addEventListener('change',function(){
-  S.ship.client=this.value; S.ship.orderId=''; S.ship.rows=[];
+  S.ship.client=this.value; S.ship.orderId=''; S.ship.rows=[]; S.ship.editId=null;
+  $('#sSubmit').textContent='Подтвердить отправку';
   $('#sForm').style.display='none'; $('#sOrderInfo').innerHTML=''; $('#sResult').innerHTML=''; $('#sCapBox').innerHTML='';
   var sel=$('#sOrder'); sel.innerHTML='<option value="">…загрузка…</option>';
   if(!this.value){sel.innerHTML='<option value="">—</option>';return;}
@@ -1360,16 +1361,23 @@ $('#sSubmit').addEventListener('click',function(){
     return;
   }
   var btn=this; btn.disabled=true; btn.innerHTML='<span class="loading"></span>';
-  gas('submitShipment',{login:S.user.login,orderId:S.ship.orderId,client:S.ship.client,comment:comment,
-       lines:rows.map(function(r){return {name:r.name,cls:r.cls,ordered:r.ordered,shipped:r.shipped,price:r.price};})})
+  var editing = !!S.ship.editId;
+  var fn = editing ? 'editShipment' : 'submitShipment';
+  var payload = editing
+    ? {login:S.user.login,shipmentId:S.ship.editId,comment:comment,
+       lines:rows.map(function(r){return {name:r.name,cls:r.cls,ordered:r.ordered,shipped:r.shipped,price:r.price};})}
+    : {login:S.user.login,orderId:S.ship.orderId,client:S.ship.client,comment:comment,
+       lines:rows.map(function(r){return {name:r.name,cls:r.cls,ordered:r.ordered,shipped:r.shipped,price:r.price};})};
+  gas(fn,payload)
    .then(function(r){
-     btn.disabled=false; btn.innerHTML='Подтвердить отправку';
+     btn.disabled=false; btn.innerHTML=editing?'Сохранить изменения':'Подтвердить отправку';
      showShipResult(r);
      $('#sForm').style.display='none';
      if($('#sComment')) $('#sComment').value='';
-     $('#sClient').dispatchEvent(new Event('change')); // обновить список ID
-     toast('Отправка '+r.shipmentId+' сохранена в «Архив отправки»');
-   }).catch(function(e){btn.disabled=false;btn.innerHTML='Подтвердить отправку';toast(String(e.message||e),true);});
+     S.ship.editId=null;
+     if(!editing) $('#sClient').dispatchEvent(new Event('change')); // обновить список ID
+     toast('Отправка '+r.shipmentId+(editing?' изменена':' сохранена в «Архив отправки»'));
+   }).catch(function(e){btn.disabled=false;btn.innerHTML=editing?'Сохранить изменения':'Подтвердить отправку';toast(String(e.message||e),true);});
 });
 function showShipResult(r){
   var box=$('#sResult'); box.innerHTML='';
@@ -1801,7 +1809,7 @@ function renderMyReturns(list){
   html+='<div class="panel" style="overflow:hidden"><div class="tablewrap" style="max-height:none"><table class="tbl"><thead><tr>'+
     '<th>ID</th><th>Дата</th><th>Клиент</th><th>Причины</th><th class="r">Кол-во</th><th class="r">Сумма</th><th class="c">Статус</th><th></th></tr></thead><tbody>';
   list.forEach(function(g){
-    var canEdit = g.status==='Отклонено' || (['admin','manager'].indexOf(S.user.role)>=0);
+    var canEdit = g.status!=='Принято' && (g.status==='Отклонено' || (['admin','manager'].indexOf(S.user.role)>=0));
     html+='<tr><td class="mono">'+g.returnId+'</td><td>'+g.date+'</td><td>'+esc(g.client)+'</td>'+
       '<td style="font-size:12px">'+esc(g.reason)+(g.comment?' · «'+esc(g.comment)+'»':'')+(g.status==='Отклонено'&&g.checkedBy?'<br><span style="color:#a23b3b">⛔ '+esc(g.checkedBy)+'</span>':'')+'</td>'+
       '<td class="r num">'+num(g.qty)+'</td><td class="r num">'+money(g.sum)+'</td>'+
@@ -2509,6 +2517,28 @@ function goEditReturn(returnId){
     if(_retInit || tries>40){ clearInterval(iv); retEdit(returnId); }
   }, 150);
 }
+function goEditShipment(shipmentId){
+  showView('ship');
+  gas('getShipmentById', S.user.login, shipmentId).then(function(s){
+    S.ship.editId = shipmentId;
+    S.ship.client = s.client;
+    S.ship.orderId = s.orderId;
+    S.ship.offSchedule = false;
+    S.ship.rows = s.lines.map(function(l){
+      var p = (S.boot.products||[]).filter(function(x){return x.name===l.name;})[0];
+      return {cls:l.cls, name:l.name, price:l.price, ordered:l.ordered, shipped:l.shipped, cube:(p&&p.cube)||0};
+    });
+    $('#sClient').value = s.client;
+    var box=$('#sOrderInfo'); box.innerHTML='';
+    box.appendChild(chip('✎ Отправка','<b>'+shipmentId+'</b> (изменение)'));
+    box.appendChild(chip('🧾 Заказ', s.orderId||'—'));
+    box.appendChild(chip('📅 Дата отправки', s.shipDate||'—'));
+    $('#sResult').innerHTML=''; $('#sCapBox').innerHTML='';
+    $('#sSubmit').textContent='Сохранить изменения';
+    $('#sForm').style.display='block';
+    renderShipTable();
+  }).catch(function(e){ toast(String(e.message||e), true); });
+}
 function renderDocs(){
   if(!_docs) return;
   var list = _hMode==='orders' ? _docs.orders : (_hMode==='ships' ? _docs.shipments : (_docs.returns||[]));
@@ -2519,8 +2549,8 @@ function renderDocs(){
   list.forEach(function(d){
     var head, thead, body, totRow, badge='';
     var canEdit = _hMode==='orders' ? ((isPriv || S.user.role==='orderer') && d.status!=='Отправлен')
-                : _hMode==='returns' ? (isPriv || d.status==='Отклонено')
-                : false;   // отправки редактировать нельзя
+                : _hMode==='returns' ? (d.status!=='Принято' && (isPriv || d.status==='Отклонено'))
+                : (['admin','manager','shipper'].indexOf(S.user.role)>=0);   // отправку может изменить кладовщик/менеджер/админ
     if(_hMode==='returns'){
       head='Возврат '+d.id+' · '+d.date+(d.mode?(' · режим '+esc(d.mode)):'');
       thead='<tr><th>Товар</th><th class="r">Кол-во</th><th>Причина</th><th>Где</th><th class="r">Сумма</th></tr>';
@@ -2568,6 +2598,7 @@ function renderDocs(){
   $all('#hBody [data-edit]').forEach(function(b){ b.addEventListener('click',function(e){
     e.stopPropagation();
     if(_hMode==='orders') goEditOrder(this.dataset.edit, this.dataset.client);
+    else if(_hMode==='ships') goEditShipment(this.dataset.edit);
     else goEditReturn(this.dataset.edit);
   }); });
 }

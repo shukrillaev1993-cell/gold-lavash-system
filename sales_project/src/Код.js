@@ -1006,6 +1006,52 @@ function submitShipment(payload){
            mismatch:mismatch, offSchedule:offSchedule, comment:comment,
            client:client, shipDate:fmtDate(shipDate) };
 }
+
+// Изменить уже проведённую отправку (кладовщик/менеджер/админ).
+// payload: { login, shipmentId, comment, lines:[{name,cls,ordered,shipped,price}] }
+function editShipment(payload){
+  var user = authUser_(payload.login);
+  if (['admin','manager','shipper'].indexOf(user.role) < 0) throw new Error('Недостаточно прав для изменения отправки.');
+  var shipId = String(payload.shipmentId||''); if(!shipId) throw new Error('Не указан ID отправки.');
+  var all = readShipments_().filter(function(s){ return String(s.id)===shipId; });
+  if (!all.length) throw new Error('Отправка не найдена: '+shipId);
+  var client = all[0].client, orderId = all[0].orderId, shipDate = all[0].shipDate;
+  assertClientAllowed_(user, client);
+
+  var lines = (payload.lines||[]).filter(function(l){ return toNum(l.ordered)>0 || toNum(l.shipped)>0; });
+  if (!lines.length) throw new Error('Нет позиций для отправки.');
+  var comment = String(payload.comment||'').trim();
+
+  var beforePos = all.length;
+  var beforeQty = all.reduce(function(s,r){ return s+r.shipped; },0);
+  var beforeSum = all.reduce(function(s,r){ return s+r.sum; },0);
+
+  var sh = getSheetOrThrow(SHEET_SHIP);
+  var lock = acquireLock_();
+  var rows=[], totOrd=0, totShip=0, totSum=0;
+  try{
+    var rowsToDel = all.map(function(r){return r.row;}).sort(function(a,b){return b-a;});
+    rowsToDel.forEach(function(rw){ sh.deleteRow(rw); });
+    var startNo = Math.max(0, sh.getLastRow()-1);
+    var now = new Date();
+    lines.forEach(function(l,i){
+      var ordered=toNum(l.ordered), shipped=toNum(l.shipped), price=toNum(l.price);
+      var sum=shipped*price;
+      totOrd+=ordered; totShip+=shipped; totSum+=sum;
+      rows.push([ startNo+i+1, shipId, orderId, shipDate, client, l.cls||'', l.name,
+                  ordered, shipped, price, sum, user.login, now, comment ]);
+    });
+    sh.getRange(sh.getLastRow()+1,1,rows.length,SHIP_HEADERS.length).setValues(rows);
+  } finally { lock.releaseLock(); }
+
+  logOrderChange_('Отправка', 'Изменение', shipId, client, user,
+    {pos:beforePos,qty:beforeQty,sum:beforeSum}, {pos:rows.length,qty:totShip,sum:totSum}, comment);
+
+  return { ok:true, shipmentId:shipId, orderId:orderId, lines:rows.length,
+           totalOrdered:totOrd, totalShipped:totShip, totalSum:totSum,
+           client:client, shipDate:fmtDate(shipDate) };
+}
+
 // Является ли сегодня днём отправки клиента по графику.
 function isShipDayToday_(client){
   var cl=null; readSchedule_().forEach(function(c){ if(norm(c.name)===norm(client)) cl=c; });
@@ -1989,8 +2035,9 @@ function submitReturn(payload){
   return { ok:true, returnId:returnId, client:client, lines:built.rows.length, totalQty:built.totQty, totalSum:built.totSum, status:'Ожидание' };
 }
 
-// Изменить возврат. Дилер — только свой и только отклонённый; admin/manager — любой возврат
-// в любом статусе, и могут указать дату задним числом через payload.date.
+// Изменить возврат. Дилер — только свой и только отклонённый; admin/manager — заказ в статусе
+// «Ожидание» или «Отклонено» (в любом статусе, кроме уже принятого — его менять нельзя никому),
+// и могут указать дату задним числом через payload.date.
 function updateReturn(payload){
   var user = authUser_(payload.login);
   var returnId = String(payload.returnId||''); if(!returnId) throw new Error('Не указан ID возврата.');
@@ -1998,6 +2045,7 @@ function updateReturn(payload){
   if (!all.length) throw new Error('Возврат не найден: '+returnId);
   var isPriv = (user.role==='admin' || user.role==='manager');
   if (user.role==='orderer' && norm(all[0].login)!==norm(user.login)) throw new Error('Можно изменять только свои возвраты.');
+  if (all[0].status==='Принято') throw new Error('Принятый возврат изменить нельзя.');
   if (!isPriv && all[0].status!=='Отклонено') throw new Error('Изменять можно только отклонённый возврат.');
   var client = all[0].client;
   var customDate = null;
