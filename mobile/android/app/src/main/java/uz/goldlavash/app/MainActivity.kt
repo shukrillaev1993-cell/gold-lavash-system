@@ -95,7 +95,12 @@ class MainActivity : AppCompatActivity() {
         offlineView = findViewById(R.id.offlineView)
 
         findViewById<Button>(R.id.retryButton).setOnClickListener { loadApp() }
-        swipeRefresh.setOnRefreshListener { loadApp() }
+        // Свайп-обновление перезагружает страницу целиком, а сессия входа
+        // хранится только в памяти открытой страницы (не в localStorage) —
+        // после такой перезагрузки система разлогинивает пользователя.
+        // Поэтому жест отключаем; сам SwipeRefreshLayout оставляем только
+        // как контейнер layout'а.
+        swipeRefresh.isEnabled = false
 
         setupWebView()
         loadApp()

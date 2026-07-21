@@ -34,10 +34,10 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         webView.scrollView.bounces = true
         view.addSubview(webView)
 
-        let refreshControl = UIRefreshControl()
-        refreshControl.tintColor = brandGold
-        refreshControl.addTarget(self, action: #selector(handlePullToRefresh), for: .valueChanged)
-        webView.scrollView.refreshControl = refreshControl
+        // Свайп-обновление перезагружает страницу целиком, а сессия входа
+        // хранится только в памяти открытой страницы (не сохраняется) —
+        // после такой перезагрузки система разлогинивает пользователя.
+        // Поэтому жест не подключаем.
 
         activityIndicator.color = brandGold
         activityIndicator.center = view.center
@@ -81,10 +81,6 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         ])
     }
 
-    @objc private func handlePullToRefresh() {
-        loadApp()
-    }
-
     @objc private func loadApp() {
         offlineView.isHidden = true
         webView.isHidden = false
@@ -95,7 +91,6 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         activityIndicator.stopAnimating()
-        webView.scrollView.refreshControl?.endRefreshing()
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
@@ -108,7 +103,6 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
     private func showOffline() {
         activityIndicator.stopAnimating()
-        webView.scrollView.refreshControl?.endRefreshing()
         offlineView.isHidden = false
         webView.isHidden = true
     }
