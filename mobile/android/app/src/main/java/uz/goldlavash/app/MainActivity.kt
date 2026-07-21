@@ -1,6 +1,7 @@
 package uz.goldlavash.app
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -8,16 +9,21 @@ import android.net.ConnectivityManager
 import android.net.Uri
 import android.net.http.SslError
 import android.os.Bundle
+import android.os.Message
 import android.provider.MediaStore
 import android.view.View
+import android.webkit.JsPromptResult
+import android.webkit.JsResult
 import android.webkit.PermissionRequest
 import android.webkit.SslErrorHandler
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import androidx.activity.result.ActivityResultLauncher
@@ -102,8 +108,13 @@ class MainActivity : AppCompatActivity() {
         s.databaseEnabled = true
         s.mediaPlaybackRequiresUserGesture = false
         s.cacheMode = WebSettings.LOAD_DEFAULT
-        s.setSupportZoom(false)
-        s.builtInZoomControls = false
+        // Позволяем щипком увеличивать мелкие кнопки/текст (сама страница
+        // рассчитана на десктоп, не на телефон) — кнопки зума скрыты,
+        // остаётся только жест "щипок".
+        s.setSupportZoom(true)
+        s.builtInZoomControls = true
+        s.displayZoomControls = false
+        s.setSupportMultipleWindows(true)
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -152,6 +163,80 @@ class MainActivity : AppCompatActivity() {
                 // JS getUserMedia() не используется в системе (фото идёт через
                 // input[type=file][capture]) — отклоняем на всякий случай.
                 request?.deny()
+            }
+
+            // Обычный WebView молча игнорирует window.open()/target=_blank —
+            // именно так открываются страницы "Карточка ОС", "Фото", "Печать
+            // наклеек". Перехватываем адрес и грузим его в том же WebView.
+            override fun onCreateWindow(
+                view: WebView?,
+                isDialog: Boolean,
+                isUserGesture: Boolean,
+                resultMsg: Message?
+            ): Boolean {
+                val transport = resultMsg?.obj as? WebView.WebViewTransport
+                val popupWebView = WebView(this@MainActivity)
+                popupWebView.webViewClient = object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(
+                        v: WebView?,
+                        request: WebResourceRequest?
+                    ): Boolean {
+                        request?.url?.let { webView.loadUrl(it.toString()) }
+                        return true
+                    }
+                }
+                transport?.webView = popupWebView
+                resultMsg?.sendToTarget()
+                return true
+            }
+
+            // Без этих трёх переопределений confirm()/alert()/prompt() из
+            // веб-страницы (их в системе много — подтверждения удаления,
+            // списания, выхода и т.д.) не показываются вообще, и связанная
+            // с ними кнопка выглядит "нерабочей".
+            override fun onJsAlert(
+                view: WebView?, url: String?, message: String?, result: JsResult?
+            ): Boolean {
+                AlertDialog.Builder(this@MainActivity)
+                    .setMessage(message)
+                    .setPositiveButton("OK") { _, _ -> result?.confirm() }
+                    .setOnCancelListener { result?.cancel() }
+                    .setCancelable(false)
+                    .show()
+                return true
+            }
+
+            override fun onJsConfirm(
+                view: WebView?, url: String?, message: String?, result: JsResult?
+            ): Boolean {
+                AlertDialog.Builder(this@MainActivity)
+                    .setMessage(message)
+                    .setPositiveButton("OK") { _, _ -> result?.confirm() }
+                    .setNegativeButton("Отмена") { _, _ -> result?.cancel() }
+                    .setOnCancelListener { result?.cancel() }
+                    .setCancelable(false)
+                    .show()
+                return true
+            }
+
+            override fun onJsPrompt(
+                view: WebView?,
+                url: String?,
+                message: String?,
+                defaultValue: String?,
+                result: JsPromptResult?
+            ): Boolean {
+                val input = EditText(this@MainActivity)
+                input.setText(defaultValue)
+                AlertDialog.Builder(this@MainActivity)
+                    .setMessage(message)
+                    .setView(input)
+                    .setPositiveButton("OK") { _, _ -> result?.confirm(input.text.toString()) }
+                    .setNegativeButton("Отмена") { _, _ -> result?.cancel() }
+                    .setOnCancelListener { result?.cancel() }
+                    .setCancelable(false)
+                    .show()
+                return true
             }
         }
     }

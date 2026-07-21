@@ -18,7 +18,7 @@ function getSpaHtml() {
   lines.push('<html lang="ru">');
   lines.push('<head>');
   lines.push('<meta charset="UTF-8">');
-  lines.push('<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">');
+  lines.push('<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0">');
   lines.push('<title>GOLD LAVASH</title>');
   lines.push(getSpaCss());
   lines.push('</head>');

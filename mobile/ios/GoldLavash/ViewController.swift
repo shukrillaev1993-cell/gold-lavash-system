@@ -7,7 +7,7 @@ import WebKit
 /// <input type="file" capture="environment"> — отдельный код для этого
 /// не нужен (в отличие от Android). Нужно только разрешение в Info.plist
 /// (см. IOS_SETUP.md — NSCameraUsageDescription и NSPhotoLibraryUsageDescription).
-final class ViewController: UIViewController, WKNavigationDelegate {
+final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate {
 
     // Стабильный адрес рабочего деплоя. При редеплое на тот же
     // -i deployment id (clasp deploy -i AKfycby...) этот адрес не меняется.
@@ -30,6 +30,7 @@ final class ViewController: UIViewController, WKNavigationDelegate {
         webView = WKWebView(frame: view.bounds, configuration: config)
         webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         webView.navigationDelegate = self
+        webView.uiDelegate = self
         webView.scrollView.bounces = true
         view.addSubview(webView)
 
@@ -110,5 +111,62 @@ final class ViewController: UIViewController, WKNavigationDelegate {
         webView.scrollView.refreshControl?.endRefreshing()
         offlineView.isHidden = false
         webView.isHidden = true
+    }
+
+    // window.open()/target="_blank" (страницы "Карточка ОС", "Фото ОС",
+    // "Печать наклеек") без этого метода WKWebView просто ничего не делает —
+    // грузим адрес в том же webView вместо открытия нового окна.
+    func webView(
+        _ webView: WKWebView,
+        createWebViewWith configuration: WKWebViewConfiguration,
+        for navigationAction: WKNavigationAction,
+        windowFeatures: WKWindowFeatures
+    ) -> WKWebView? {
+        if navigationAction.targetFrame == nil {
+            webView.load(navigationAction.request)
+        }
+        return nil
+    }
+
+    // Без этих трёх методов confirm()/alert()/prompt() из веб-страницы
+    // (подтверждения удаления, списания, выхода и т.д. — их в системе много)
+    // не показываются вообще, и связанная с ними кнопка выглядит "нерабочей".
+    func webView(
+        _ webView: WKWebView,
+        runJavaScriptAlertPanelWithMessage message: String,
+        initiatedByFrame frame: WKFrameInfo,
+        completionHandler: @escaping () -> Void
+    ) {
+        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler() })
+        present(alert, animated: true)
+    }
+
+    func webView(
+        _ webView: WKWebView,
+        runJavaScriptConfirmPanelWithMessage message: String,
+        initiatedByFrame frame: WKFrameInfo,
+        completionHandler: @escaping (Bool) -> Void
+    ) {
+        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Отмена", style: .cancel) { _ in completionHandler(false) })
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler(true) })
+        present(alert, animated: true)
+    }
+
+    func webView(
+        _ webView: WKWebView,
+        runJavaScriptTextInputPanelWithPrompt prompt: String,
+        defaultText: String?,
+        initiatedByFrame frame: WKFrameInfo,
+        completionHandler: @escaping (String?) -> Void
+    ) {
+        let alert = UIAlertController(title: nil, message: prompt, preferredStyle: .alert)
+        alert.addTextField { $0.text = defaultText }
+        alert.addAction(UIAlertAction(title: "Отмена", style: .cancel) { _ in completionHandler(nil) })
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+            completionHandler(alert.textFields?.first?.text)
+        })
+        present(alert, animated: true)
     }
 }
