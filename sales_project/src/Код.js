@@ -1880,8 +1880,8 @@ function getReconciliation(loginName, client, filter){
     byRet[k].sum+=rt.sum;
   });
   Object.keys(byRet).forEach(function(k){ var x=byRet[k];
-    if(x.tara) ops.push({ d:toDate_(x.d), doc:'Тара '+x.id, kind:'Тара', debit:0, credit:Math.round(x.sum) });
-    else ops.push({ d:toDate_(x.d), doc:'Возврат '+x.id+(x.reason?' ('+x.reason+')':''), kind:'Возврат', debit:0, credit:Math.round(x.sum) }); });
+    if(x.tara) ops.push({ d:toDate_(x.d), doc:'Тара '+x.id, kind:'Тара', id:x.id, debit:0, credit:Math.round(x.sum) });
+    else ops.push({ d:toDate_(x.d), doc:'Возврат '+x.id+(x.reason?' ('+x.reason+')':''), kind:'Возврат', id:x.id, debit:0, credit:Math.round(x.sum) }); });
   ops.sort(function(a,b){ var ta=a.d?a.d.getTime():0, tb=b.d?b.d.getTime():0; return ta-tb; });
 
   var run=opening, list=[], td=0, tc=0;
