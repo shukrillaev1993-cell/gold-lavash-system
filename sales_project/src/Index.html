@@ -2192,8 +2192,13 @@ function renderAkt(a, bodyId){
     '<th>Дата</th><th>Документ</th><th class="r">Реализация (+)</th><th class="r">Поступление (−)</th><th class="r">Сальдо</th></tr></thead><tbody>';
   html+='<tr style="background:#faf7f1"><td colspan="4"><b>Сальдо на начало</b></td><td class="r num"><b>'+money(a.opening)+'</b></td></tr>';
   if(!a.ops.length) html+='<tr><td colspan="5" class="empty">нет операций за период</td></tr>';
+  var canEditShip = ['admin','manager','shipper'].indexOf(S.user.role)>=0;
   a.ops.forEach(function(o){
-    html+='<tr><td>'+o.date+'</td><td>'+esc(o.doc)+'</td>'+
+    var docCell = esc(o.doc);
+    if(o.kind==='Реализация' && o.id && canEditShip){
+      docCell += ' <button class="btn ghost sm" data-akt-edit-ship="'+esc(o.id)+'" style="padding:2px 8px;margin-left:6px">✎</button>';
+    }
+    html+='<tr><td>'+o.date+'</td><td>'+docCell+'</td>'+
       '<td class="r num">'+(o.debit?money(o.debit):'')+'</td>'+
       '<td class="r num">'+(o.credit?money(o.credit):'')+'</td>'+
       '<td class="r num">'+money(o.balance)+'</td></tr>';
@@ -2206,6 +2211,9 @@ function renderAkt(a, bodyId){
   html+='<p class="sub" style="margin-top:8px">'+(a.closing>0?'Контрагент должен нам '+money(a.closing)+' '+cur
       :(a.closing<0?'Мы должны контрагенту '+money(-a.closing)+' '+cur:'Взаиморасчёты закрыты'))+'.</p>';
   $(bodyId).innerHTML=html;
+  $all(bodyId+' [data-akt-edit-ship]').forEach(function(b){ b.addEventListener('click',function(e){
+    e.stopPropagation(); goEditShipment(this.dataset.aktEditShip);
+  }); });
 }
 function printAkt(){
   if(!_akt){toast('Сначала сформируйте акт',true);return;}

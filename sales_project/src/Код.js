@@ -1866,7 +1866,7 @@ function getReconciliation(loginName, client, filter){
     var k=String(s.id); if(!byShip[k]) byShip[k]={d:s.shipDate, id:s.id, sum:0}; byShip[k].sum+=s.sum;
   });
   Object.keys(byShip).forEach(function(k){ var x=byShip[k];
-    ops.push({ d:toDate_(x.d), doc:'Отгрузка '+x.id, kind:'Реализация', debit:Math.round(x.sum), credit:0 }); });
+    ops.push({ d:toDate_(x.d), doc:'Отгрузка '+x.id, kind:'Реализация', id:x.id, debit:Math.round(x.sum), credit:0 }); });
   readReceipts_().forEach(function(r){
     if(norm(r.client)!==norm(client) || !inRange(r.date)) return;
     ops.push({ d:toDate_(r.date), doc:'Оплата'+(r.type?' ('+r.type+')':''), kind:'Поступление', debit:0, credit:Math.round(r.sum) }); });
@@ -1886,7 +1886,7 @@ function getReconciliation(loginName, client, filter){
 
   var run=opening, list=[], td=0, tc=0;
   ops.forEach(function(o){ run += o.debit - o.credit; td+=o.debit; tc+=o.credit;
-    list.push({ date:fmtDate(o.d), doc:o.doc, kind:o.kind, debit:o.debit, credit:o.credit, balance:Math.round(run) }); });
+    list.push({ date:fmtDate(o.d), doc:o.doc, kind:o.kind, id:o.id||null, debit:o.debit, credit:o.credit, balance:Math.round(run) }); });
   return { client:client, generatedAt:fmtDate(new Date()), opening:Math.round(opening),
            closing:Math.round(run), totalDebit:Math.round(td), totalCredit:Math.round(tc), ops:list };
 }
