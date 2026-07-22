@@ -20,3 +20,7 @@ mobile/ios/GoldLavash-unsigned.ipa
 # clasp / Apps Script auth (never commit tokens)
 .clasprc.json
 .clasp.json.bak
+
+# Jarvis (personal AI assistant)
+jarvis/dist/
+jarvis/.env

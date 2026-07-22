@@ -95,6 +95,15 @@ var HR_STATE_LEAVE_VALUES  = ['В отпуске', 'На отпуск'];
 var HR_STATE_FIRED_VALUES  = ['Уволен(а)', 'Уволен', 'Уволена'];
 var HR_STATE_DEFAULT_ACTIVE = HR_STATE_ACTIVE_VALUES[0]; // 'В штате' — записывается при новом приёме
 
+// Лист «Изменение Данные» унаследовал заголовки листа «Нынешние инфо» (А-M) плюс
+// «Ссылка на ТТ документ» (N) — своих колонок под текст действия и автора изменения
+// там не было, поэтому раньше это писалось поверх «Состояние» (L) и «Ссылка на ТТ
+// документ» (N), портя их. Дописываем настоящие колонки O/P один раз при необходимости.
+function hrEnsureChangeLogHeaders_(sh) {
+  if (String(sh.getRange(1, 15).getValue() || '').trim() === '') sh.getRange(1, 15).setValue('Действие');
+  if (String(sh.getRange(1, 16).getValue() || '').trim() === '') sh.getRange(1, 16).setValue('Кто изменил');
+}
+
 function hrIsActiveState(state) {
   state = (state || '').toString().trim();
   return HR_STATE_ACTIVE_VALUES.indexOf(state) !== -1 || HR_STATE_LEAVE_VALUES.indexOf(state) !== -1;
@@ -208,13 +217,17 @@ function hrHireEmployee(user, payload) {
       Utilities.formatDate(now, Session.getScriptTimeZone(), 'dd.MM.yyyy HH:mm'),
       user.fio]);
   }
-  // Запись в общий журнал изменений (используется также при перемещении кадров)
+  // Запись в общий журнал изменений (используется также при перемещении кадров).
+  // Колонка L («Состояние») — реальное состояние сотрудника, а не текст действия;
+  // само действие и автор пишутся в отдельные колонки O/P (см. hrEnsureChangeLogHeaders_).
   var shChg = ss.getSheetByName('Изменение Данные');
   if (shChg) {
+    hrEnsureChangeLogHeaders_(shChg);
     shChg.appendRow([id,
       Utilities.formatDate(now, Session.getScriptTimeZone(), 'dd.MM.yyyy HH:mm'),
       payload.fio, payload.dept, payload.position, payload.status||'', '', '', '', '', '',
-      'Приём на работу', '', user.fio]);
+      HR_STATE_DEFAULT_ACTIVE, '', '',
+      'Приём на работу', user.fio]);
   }
   return {ok:true, id:id, message:payload.fio+' \u043f\u0440\u0438\u043d\u044f\u0442(\u0430) \u043d\u0430 \u0440\u0430\u0431\u043e\u0442\u0443'};
 }
@@ -561,10 +574,12 @@ function hrCreateMove(user, payload) {
   // Записать в "Изменение Данные"
   var shChg = ss.getSheetByName('\u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0435 \u0414\u0430\u043d\u043d\u044b\u0435');
   if (shChg) {
+    hrEnsureChangeLogHeaders_(shChg);
     shChg.appendRow([payload.empId,
       Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd.MM.yyyy HH:mm'),
       empRow[2], newDept, newPos, empRow[5], '', '', '', '', '',
-      moveType + ': ' + oldDept+'/'+oldPos+' → '+newDept+'/'+newPos, '', user.fio]);
+      empRow[11]||'', '', '',
+      moveType + ': ' + oldDept+'/'+oldPos+' → '+newDept+'/'+newPos, user.fio]);
   }
 
   return {ok:true, message:empRow[2]+': '+moveType+' \u0437\u0430\u0444\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u043d\u043e'};

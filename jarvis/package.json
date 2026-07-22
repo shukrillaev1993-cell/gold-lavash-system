@@ -1,0 +1,23 @@
+{
+  "name": "jarvis",
+  "version": "0.1.0",
+  "description": "Личный AI-ассистент на базе Claude API",
+  "private": true,
+  "main": "dist/main/main.js",
+  "scripts": {
+    "build": "tsc && node scripts/copy-assets.js",
+    "start": "npm run build && electron .",
+    "dev": "npm run build && electron . --dev"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.112.4",
+    "dotenv": "^17.2.3",
+    "electron-store": "^8.2.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "electron": "^33.0.0",
+    "typescript": "^5.9.0"
+  }
+}
