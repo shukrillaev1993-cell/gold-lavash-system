@@ -9,6 +9,19 @@ import * as os from "os";
  * должны указывать на один и тот же каталог.
  */
 export function getUserDataDir(): string {
-  const appDataDir = process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming");
-  return path.join(appDataDir, "jarvis");
+  const platform = process.platform;
+  const homedir = os.homedir();
+
+  if (platform === "win32") {
+    const appDataDir = process.env.APPDATA || path.join(homedir, "AppData", "Roaming");
+    return path.join(appDataDir, "jarvis");
+  }
+
+  if (platform === "darwin") {
+    return path.join(homedir, "Library", "Application Support", "jarvis");
+  }
+
+  // Linux и другие платформы (Render, Hugging Face Spaces и т.д.)
+  const configHome = process.env.XDG_CONFIG_HOME || path.join(homedir, ".config");
+  return path.join(configHome, "jarvis");
 }
