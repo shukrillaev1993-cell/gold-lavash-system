@@ -21,7 +21,21 @@ export function getUserDataDir(): string {
     return path.join(homedir, "Library", "Application Support", "jarvis");
   }
 
-  // Linux и другие платформы (Render, Hugging Face Spaces и т.д.)
+  // Linux и другие платформы (Render, Hugging Face Spaces, Docker и т.д.)
+  // В облачных контейнерах домашняя директория часто указывает на защищенные пути
+  // вроде "/root" или несуществующие "/homeless-shelter", запись в которые вызывает EACCES.
+  const isCloudOrDocker =
+    process.env.RENDER === "true" ||
+    process.env.PORT !== undefined ||
+    homedir === "/" ||
+    homedir === "/homeless-shelter" ||
+    !homedir;
+
+  if (isCloudOrDocker) {
+    // В облаке папка /tmp гарантированно доступна для записи на любых Unix-системах
+    return path.join("/tmp", "jarvis");
+  }
+
   const configHome = process.env.XDG_CONFIG_HOME || path.join(homedir, ".config");
   return path.join(configHome, "jarvis");
 }
