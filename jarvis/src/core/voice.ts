@@ -2,7 +2,7 @@ import * as path from "path";
 import { getUserDataDir } from "./paths";
 import { getSettings } from "./store";
 
-const MODEL = "Xenova/whisper-base";
+const MODEL = "Xenova/whisper-tiny";
 
 const WHISPER_LANG_MAPPING: Record<string, string> = {
   ru: "russian",
