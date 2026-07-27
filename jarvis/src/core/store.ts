@@ -34,6 +34,9 @@ export interface Settings {
   cloudBotUrl: string;
   cloudHeartbeatSecret: string;
   voiceLanguage: "ru" | "uz" | "en";
+  githubToken: string;
+  obsidianRepo: string;
+  obsidianBranch: string;
 }
 
 interface JarvisSchema {
@@ -62,6 +65,9 @@ const store = new Store<JarvisSchema>({
       cloudBotUrl: "",
       cloudHeartbeatSecret: "",
       voiceLanguage: "ru",
+      githubToken: "",
+      obsidianRepo: "",
+      obsidianBranch: "main",
     },
     history: [],
     reminders: [],
@@ -88,6 +94,9 @@ export function getSettings(): Settings {
   const cloudBotUrl = process.env.CLOUD_BOT_URL || localSettings.cloudBotUrl || "";
   const cloudHeartbeatSecret = process.env.CLOUD_HEARTBEAT_SECRET || localSettings.cloudHeartbeatSecret || "";
   const voiceLanguage = (process.env.VOICE_LANGUAGE as "ru" | "uz" | "en") || localSettings.voiceLanguage || "ru";
+  const githubToken = process.env.GITHUB_TOKEN || localSettings.githubToken || "";
+  const obsidianRepo = process.env.OBSIDIAN_REPO || localSettings.obsidianRepo || "";
+  const obsidianBranch = process.env.OBSIDIAN_BRANCH || localSettings.obsidianBranch || "main";
 
   return {
     provider,
@@ -102,6 +111,9 @@ export function getSettings(): Settings {
     cloudBotUrl,
     cloudHeartbeatSecret,
     voiceLanguage,
+    githubToken,
+    obsidianRepo,
+    obsidianBranch,
   };
 }
 

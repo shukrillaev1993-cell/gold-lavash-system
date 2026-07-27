@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requestConfirmation } from "../confirmation";
 import { addReminder, cancelReminder, getReminders } from "../store";
 import { salesSheetDefs } from "./salesSheet";
+import { saveToObsidianDef } from "./obsidian";
 
 export interface LocalToolDef<S extends z.ZodType = z.ZodType> {
   name: string;
@@ -108,5 +109,6 @@ export const localToolDefs: LocalToolDef[] = [
   createReminderDef,
   listRemindersDef,
   cancelReminderDef,
+  saveToObsidianDef,
   ...salesSheetDefs,
 ];
