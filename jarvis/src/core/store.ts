@@ -1,5 +1,10 @@
 import Store from "electron-store";
+import * as dotenv from "dotenv";
+import * as path from "path";
 import { getUserDataDir } from "./paths";
+
+// Загружаем переменные окружения из .env файла в корне папки jarvis
+dotenv.config({ path: path.join(__dirname, "..", "..", ".env") });
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -66,7 +71,38 @@ const store = new Store<JarvisSchema>({
 const MAX_HISTORY = 50;
 
 export function getSettings(): Settings {
-  return store.get("settings");
+  const localSettings = store.get("settings") || {};
+  
+  // Приоритет отдаем переменным окружения, если они заданы.
+  // Это критично для headless/cloud развертываний вроде Hugging Face Spaces или Render,
+  // где нет графического интерфейса и файлы во временной директории стираются.
+  const provider = (process.env.PROVIDER as Provider) || localSettings.provider || "anthropic";
+  const apiKey = process.env.ANTHROPIC_API_KEY || process.env.API_KEY || localSettings.apiKey || "";
+  const model = process.env.MODEL || localSettings.model || "claude-3-5-haiku-20241022";
+  const ollamaModel = process.env.OLLAMA_MODEL || localSettings.ollamaModel || "llama3.1";
+  const geminiApiKey = process.env.GEMINI_API_KEY || localSettings.geminiApiKey || "";
+  const geminiModel = process.env.GEMINI_MODEL || localSettings.geminiModel || "gemini-3.5-flash";
+  const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || localSettings.telegramBotToken || "";
+  const telegramOwnerChatId = process.env.TELEGRAM_OWNER_CHAT_ID || localSettings.telegramOwnerChatId || "";
+  const telegramCommandPassword = process.env.TELEGRAM_COMMAND_PASSWORD || localSettings.telegramCommandPassword || "";
+  const cloudBotUrl = process.env.CLOUD_BOT_URL || localSettings.cloudBotUrl || "";
+  const cloudHeartbeatSecret = process.env.CLOUD_HEARTBEAT_SECRET || localSettings.cloudHeartbeatSecret || "";
+  const voiceLanguage = (process.env.VOICE_LANGUAGE as "ru" | "uz" | "en") || localSettings.voiceLanguage || "ru";
+
+  return {
+    provider,
+    apiKey,
+    model,
+    ollamaModel,
+    geminiApiKey,
+    geminiModel,
+    telegramBotToken,
+    telegramOwnerChatId,
+    telegramCommandPassword,
+    cloudBotUrl,
+    cloudHeartbeatSecret,
+    voiceLanguage,
+  };
 }
 
 export function setSettings(settings: Partial<Settings>): void {
