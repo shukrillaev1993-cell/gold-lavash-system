@@ -27,7 +27,48 @@ var ROLES = {
 
 var OS_DEPARTMENTS = ['Производство', 'Завод СЭЗ', 'ОТП Самарканд', 'ОТП Тошкент', 'Офис'];
 
-// ─── WEB APP ENTRY ───────────────────────────────────────────
+var JARVIS_API_KEY = 'GL_JARVIS_SECRET_KEY_2026'; // Рекомендуется сменить на более сложный
+
+// ─── WEB APP ENTRY (POST) ─────────────────────────────────────
+// Используется для интеграции с AI-ассистентом Jarvis
+function doPost(e) {
+  try {
+    var postData = JSON.parse(e.postData.contents);
+    
+    // Проверка API ключа
+    if (postData.apiKey !== JARVIS_API_KEY) {
+      return ContentService.createTextOutput(JSON.stringify({ok: false, error: 'UNAUTHORIZED_JARVIS'}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Если ключ верный, имитируем сессию администратора для доступа ко всем функциям
+    var adminUser = {
+      id: 'jarvis_system',
+      login: 'jarvis',
+      role: ROLES.ADMIN,
+      fio: 'Jarvis AI',
+      liniya: '',
+      smena: '',
+      isJarvis: true
+    };
+
+    // Прокидываем действие в основной обработчик
+    var result = handleAction({
+      action: postData.action,
+      payload: postData.payload,
+      token: 'SYSTEM', // handleAction увидит, что мы передали объект user ниже, или мы подправим логику
+      jarvisUser: adminUser 
+    });
+
+    return ContentService.createTextOutput(result)
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ok: false, error: err.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ─── WEB APP ENTRY (GET) ──────────────────────────────────────
 function doGet(e) {
   try {
     // Публичные страницы ОС/инвентаря — доступны по QR без входа в систему
@@ -84,8 +125,8 @@ function handleAction(dataStr) {
     if (action === 'ping')  return JSON.stringify({ok: true, msg: 'pong'});
     if (action === 'checkDB') return JSON.stringify(actionCheckDB());
 
-    // Авторизованные
-    var user = getSessionUser(data.token);
+    // Авторизация: либо по токену, либо прямой проброс от Jarvis (doPost)
+    var user = data.jarvisUser || getSessionUser(data.token);
     if (!user) return JSON.stringify({ok: false, error: 'SESSION_EXPIRED'});
 
     // ── РЕЖИМ СИМУЛЯЦИИ РОЛИ (только для Администратора) ──

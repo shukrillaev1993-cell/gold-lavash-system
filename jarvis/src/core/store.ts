@@ -1,4 +1,5 @@
 import Store from "electron-store";
+import { getUserDataDir } from "./paths";
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -13,9 +14,21 @@ export interface Reminder {
   notified: boolean;
 }
 
+export type Provider = "anthropic" | "ollama" | "gemini";
+
 export interface Settings {
+  provider: Provider;
   apiKey: string;
   model: string;
+  ollamaModel: string;
+  geminiApiKey: string;
+  geminiModel: string;
+  telegramBotToken: string;
+  telegramOwnerChatId: string;
+  telegramCommandPassword: string;
+  cloudBotUrl: string;
+  cloudHeartbeatSecret: string;
+  voiceLanguage: "ru" | "uz" | "en";
 }
 
 interface JarvisSchema {
@@ -26,8 +39,25 @@ interface JarvisSchema {
 
 const store = new Store<JarvisSchema>({
   name: "jarvis-data",
+  // electron-store по умолчанию требует app.getPath('userData') из Electron-рантайма;
+  // передаём путь явно, чтобы десктоп-приложение и Telegram-бот (обычный Node-процесс)
+  // использовали один и тот же файл данных.
+  cwd: getUserDataDir(),
   defaults: {
-    settings: { apiKey: "", model: "claude-haiku-4-5" },
+    settings: {
+      provider: "anthropic",
+      apiKey: "",
+      model: "claude-3-5-haiku-20241022",
+      ollamaModel: "llama3.1",
+      geminiApiKey: "",
+      geminiModel: "gemini-3.5-flash",
+      telegramBotToken: "",
+      telegramOwnerChatId: "",
+      telegramCommandPassword: "",
+      cloudBotUrl: "",
+      cloudHeartbeatSecret: "",
+      voiceLanguage: "ru",
+    },
     history: [],
     reminders: [],
   },

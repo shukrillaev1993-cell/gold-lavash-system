@@ -19,7 +19,7 @@ export function resolveConfirmation(requestId: string, approved: boolean): void 
   entry.resolve(approved);
 }
 
-export function requestConfirmation(command: string, cwd?: string): Promise<boolean> {
+export function requestConfirmationElectron(command: string, cwd?: string): Promise<boolean> {
   return new Promise((resolve) => {
     const requestId = `confirm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     pending.set(requestId, { resolve });

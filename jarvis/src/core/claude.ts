@@ -13,6 +13,7 @@ const STATIC_SYSTEM_PROMPT = `Ты — Jarvis, персональный AI-ас�
 - Инструмент run_command — выполняет команды в системной оболочке. Пользователь ВСЕГДА видит точную команду и подтверждает или отклоняет её перед выполнением — не пытайся обойти это, не проси пользователя выполнить команду вручную вместо использования инструмента.
 - Инструменты web_search и web_fetch — для поиска и чтения актуальной информации в интернете.
 - Инструменты create_reminder / list_reminders / cancel_reminder — напоминания, которые сработают как нативные уведомления.
+- Инструменты list_sales_sheets / read_sales_sheet — доступ к данным системы учёта продаж "Gold Lavash" (Google-таблица): заказы, отправки, возвраты, цены, логистика, поступления денег. Используй их, когда пользователь просит финансовый, маркетинговый, статистический или экономический анализ/отчёт — сначала list_sales_sheets, чтобы узнать точные названия листов, затем read_sales_sheet по нужным. Некоторые листы (с логинами/паролями) недоступны намеренно — если инструмент отказал, объясни это пользователю, не пытайся обойти запрет.
 
 Отвечай на языке, на котором пишет пользователь. Будь кратким и по делу, без лишних вступлений.`;
 
@@ -55,6 +56,7 @@ export async function sendUserMessage(
   }
   const settings = getSettings();
   const client = new Anthropic({ apiKey });
+  const model = settings.model || "claude-3-5-haiku-20241022";
 
   const history = getHistory();
   const messages = [
@@ -63,12 +65,10 @@ export async function sendUserMessage(
   ];
 
   const runner = client.beta.messages.toolRunner({
-    model: settings.model || "claude-haiku-4-5",
+    model,
     max_tokens: 16000,
     system: buildSystemPrompt(),
     tools,
-    thinking: { type: "adaptive" },
-    output_config: { effort: "medium" },
     messages,
     stream: true,
   });

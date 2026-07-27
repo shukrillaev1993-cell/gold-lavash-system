@@ -53,6 +53,28 @@ body {
   cursor: pointer;
 }
 
+.icon-btn[aria-pressed="true"] {
+  color: #2f6feb;
+}
+
+.mic-btn {
+  font-size: 18px;
+  padding: 0 8px;
+  border-radius: 8px;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.mic-btn.recording {
+  background: #4a1f1f;
+  color: #ff5c5c;
+  animation: mic-pulse 1s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .reminders-list {
   list-style: none;
   padding: 0;
@@ -163,6 +185,24 @@ body {
   display: none;
 }
 
+.hidden {
+  display: none;
+}
+
+.hint {
+  font-size: 12px;
+  color: #8a8d96;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+.hint code {
+  background: #101114;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #ffce7a;
+}
+
 .modal-box {
   background: #202127;
   border: 1px solid #34353b;
@@ -170,10 +210,19 @@ body {
   padding: 20px;
   width: 480px;
   max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal-box h3 {
   margin-top: 0;
+}
+
+.modal-box h3.section-title {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #34353b;
+  font-size: 14px;
 }
 
 .command-preview {

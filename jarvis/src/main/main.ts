@@ -1,12 +1,18 @@
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
 import { registerIpcHandlers } from "./ipc";
-import { registerMainWindow as registerConfirmWindow } from "../core/confirmationBroker";
+import {
+  registerMainWindow as registerConfirmWindow,
+  requestConfirmationElectron,
+} from "../core/confirmationBroker";
+import { setConfirmHandler } from "../core/confirmation";
 import {
   registerMainWindow as registerSchedulerWindow,
   startScheduler,
   stopScheduler,
 } from "../core/scheduler";
+
+setConfirmHandler(requestConfirmationElectron);
 
 let mainWindow: BrowserWindow | null = null;
 

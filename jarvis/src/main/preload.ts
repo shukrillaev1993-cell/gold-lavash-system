@@ -1,8 +1,18 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 export interface JarvisSettings {
+  provider: "anthropic" | "ollama" | "gemini";
   apiKey: string;
   model: string;
+  ollamaModel: string;
+  geminiApiKey: string;
+  geminiModel: string;
+  telegramBotToken: string;
+  telegramOwnerChatId: string;
+  telegramCommandPassword: string;
+  cloudBotUrl: string;
+  cloudHeartbeatSecret: string;
+  voiceLanguage: "ru" | "uz" | "en";
 }
 
 contextBridge.exposeInMainWorld("jarvis", {
@@ -34,4 +44,9 @@ contextBridge.exposeInMainWorld("jarvis", {
 
   getHistory: () => ipcRenderer.invoke("history:get"),
   getReminders: () => ipcRenderer.invoke("reminders:get"),
+
+  transcribeAudio: (
+    audioData: Float32Array
+  ): Promise<{ ok: boolean; text?: string; firstRun?: boolean; error?: string }> =>
+    ipcRenderer.invoke("voice:transcribe", audioData),
 });
